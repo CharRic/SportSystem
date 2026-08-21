@@ -7,8 +7,6 @@
     <view class="lesson-box {{student.lowBalance ? 'low' : ''}}"><text class="count">{{student.remainingLessons}}</text><text class="small">{{student.lowBalance ? '建议续费' : '剩余课时'}}</text></view>
   </view>
   <view class="muted small photo-tip" wx:if="{{role === 'admin' || role === 'parent'}}">点击孩子照片可从相册选择或重新拍摄</view>
-  <view class="growth-entry card pressable" bindtap="growth"><view><view class="card-title">球员成长档案</view><view class="muted small">阶段测评 · 成长趋势 · 训练评价 · 比赛记录</view></view><text class="link">查看成长 ›</text></view>
-
   <view class="card">
     <view class="between"><view class="card-title">基本信息</view><view><text class="invite" wx:if="{{role === 'admin' && mode === 'cloud' && !student.ownerParentUserId}}" bindtap="parentInvite">家长邀请码</text><text class="edit" wx:if="{{role === 'admin'}}" bindtap="edit">编辑</text></view></view>
     <view class="info"><text class="muted">家长姓名</text><text>{{student.guardianName}}</text></view>
@@ -25,18 +23,6 @@
     <view class="between"><view><view class="card-title">{{item.name}}</view><view class="muted small mt">{{item.schedule}} · {{item.venue}}</view></view><view class="tag">{{item.coachName}}</view></view>
   </view>
   <view class="empty card" wx:if="{{student.classes.length === 0}}">暂未分班</view>
-  <button wx:if="{{role === 'admin' || role === 'coach'}}" class="btn-secondary elite-action" bindtap="elite">{{role === 'admin' ? '晋升精英队' : '推荐进入精英队'}}</button>
-
-  <view class="section-title" wx:if="{{student.eliteSelections.length}}">精英队选拔记录</view><view class="card"><view class="record" wx:for="{{student.eliteSelections}}" wx:key="id"><view><view>{{item.recommendationReason}}</view><view class="muted small">{{item.createdAt}} · {{item.recommenderName}}</view></view><view class="tag {{item.status === 'REJECTED' ? 'danger' : item.status === 'PENDING' ? 'gold' : ''}}">{{item.statusLabel}}</view></view></view>
-
-  <view class="section-title" wx:if="{{student.recruitment}}">招生信息</view><view class="card" wx:if="{{student.recruitment}}"><view class="info"><text class="muted">客户来源</text><text>{{student.recruitment.source}}</text></view><view class="info"><text class="muted">原负责人</text><text>{{student.recruitment.ownerCoachName}}</text></view><view class="info"><text class="muted">首次咨询</text><text>{{student.recruitment.firstContactAt}}</text></view><view class="info"><text class="muted">体验日期</text><text>{{student.recruitment.trialDate || '未记录'}}</text></view><view class="info"><text class="muted">体验教练</text><text>{{student.recruitment.trialCoachName || '未记录'}}</text></view><view class="info"><text class="muted">成交日期</text><text>{{student.recruitment.convertedAt}}</text></view><view class="muted small feedback-content" wx:if="{{student.recruitment.trialFeedback}}">体验评价：{{student.recruitment.trialFeedback}}</view></view>
-
-  <view class="section-title">训练反馈</view>
-  <view class="card feedback" wx:for="{{student.feedback}}" wx:key="id"><view class="between"><view class="card-title">{{item.coachName}}</view><view class="tag">表现 {{item.rating}}/5</view></view><view class="feedback-content">{{item.content}}</view><view><text class="feedback-tag" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text></view><view class="muted small mt">{{item.createdAt}}</view></view>
-  <view class="empty card" wx:if="{{!student.feedback || student.feedback.length === 0}}">暂无训练反馈</view>
-
-  <view class="section-title" wx:if="{{financial}}">财务档案</view><view class="card" wx:if="{{financial}}"><view class="finance-grid" wx:if="{{role === 'admin'}}"><view><text>¥{{financial.summary.orderAmount}}</text><text>累计订单</text></view><view><text>¥{{financial.summary.paidAmount}}</text><text>累计实收</text></view><view><text>¥{{financial.summary.refundedAmount}}</text><text>累计退款</text></view><view><text>{{student.remainingLessons}}节</text><text>当前课时</text></view></view><view class="between finance-order" wx:for="{{financial.orders}}" wx:key="id" data-id="{{item.id}}" bindtap="order"><view><view>{{item.productName}}</view><view class="muted small">{{item.orderNo}} · {{item.statusLabel}}</view></view><text class="link">查看 ›</text></view><view class="empty" wx:if="{{!financial.orders.length}}">暂无订单记录</view><button wx:if="{{role === 'admin'}}" class="btn-secondary adjustment" bindtap="adjustment">赠课 / 补课 / 人工扣课</button></view>
-  <view class="section-title" wx:if="{{familyFinancial && familyFinancial.students.length > 1}}">家庭孩子经营视图</view><view class="card" wx:if="{{familyFinancial && familyFinancial.students.length > 1}}"><view class="family-row" wx:for="{{familyFinancial.students}}" wx:key="id"><view><view>{{item.name}}</view><view class="muted small">{{item.orderCount}}笔订单 · 当前{{item.remainingLessons}}节</view></view><view class="right"><view>实收 ¥{{item.paidAmount}}</view><view class="muted small">退款 ¥{{item.refundedAmount}}</view></view></view><view class="notice small">同一家庭仅用于汇总查看，每个孩子的订单和课时仍完全独立。</view></view>
   <view class="section-title">课时流水</view>
   <view class="card"><view class="ledger" wx:for="{{student.lessonLedger}}" wx:key="id"><view><view>{{item.note}}</view><view class="muted small">{{item.createdAt}} · 余额 {{item.balanceAfter}}</view></view><text class="delta {{item.delta > 0 ? 'plus' : 'minus'}}">{{item.delta > 0 ? '+' : ''}}{{item.delta}}</text></view><view class="empty" wx:if="{{!student.lessonLedger || student.lessonLedger.length === 0}}">暂无课时流水</view></view>
 

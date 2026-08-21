@@ -1,1 +1,0 @@
-const api=require("../../utils/api");Page({data:{rows:[],loading:true},onShow(){this.load()},async load(){this.setData({rows:await api.call("listTrainingPlanTemplates"),loading:false})},detail(e){wx.navigateTo({url:`/pages/training-plan-detail/index?id=${e.currentTarget.dataset.id}`})}});

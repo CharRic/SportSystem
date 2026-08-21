@@ -1,0 +1,1 @@
+.item.unread{border-left:8rpx solid #173b77}.title{font-size:30rpx;font-weight:750}.dot{width:14rpx;height:14rpx;border-radius:50%;background:#d1a72f}.content{margin:14rpx 0;line-height:1.65}

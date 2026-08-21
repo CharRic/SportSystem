@@ -1,4 +1,7 @@
-.hint { color: #587064; background: #e9f5ee; padding: 22rpx 24rpx; border-radius: 18rpx; margin-bottom: 24rpx; font-size: 24rpx; line-height: 1.6; }
+.class-actions { width: 100%; margin-bottom: 24rpx; }
+.create-pill { display: flex; width: 100%; box-sizing: border-box; align-items: center; justify-content: center; gap: 8rpx; padding: 18rpx 26rpx; border-radius: 999rpx; background: #173b77; color: #fff; font-size: 26rpx; font-weight: 700; box-shadow: 0 8rpx 20rpx rgba(23, 59, 119, .2); }
+.create-plus { font-size: 30rpx; line-height: 1; }
 .top { align-items: flex-start; }.name { font-size: 34rpx; font-weight: 800; margin-bottom: 14rpx; }.edit { color: #12643b; font-size: 24rpx; margin-left: 22rpx; }.member { text-align: right; }.member text { display: block; }.member text:first-child { color: #12643b; font-size: 42rpx; font-weight: 800; }
 .line { display: flex; justify-content: space-between; gap: 30rpx; margin: 20rpx 0; }.take { margin-top: 28rpx; }
 .capacity-note{font-size:22rpx;color:#17804a;background:#edf7f1;border-radius:12rpx;padding:12rpx 16rpx;margin-top:16rpx}.capacity-note.over{color:#b35a00;background:#fff3e6}
+.search-box{display:grid;grid-template-columns:1fr auto;gap:12rpx;align-items:center;margin-bottom:20rpx}.search-box button{margin:0;height:76rpx;line-height:76rpx}.class-code{font-size:22rpx;color:#7a817d;font-weight:500;margin-left:10rpx}

@@ -1,1 +1,0 @@
-.row{display:flex;align-items:center;gap:20rpx}.name{font-weight:780;font-size:30rpx}.count{text-align:right;color:#728095;font-size:22rpx;margin-top:10rpx}.progress{height:10rpx;background:#e9edf2;border-radius:99rpx;margin-top:18rpx;overflow:hidden}.progress view{height:100%;background:#12643b}.hint{margin-bottom:18rpx}

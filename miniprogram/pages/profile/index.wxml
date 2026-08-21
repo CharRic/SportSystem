@@ -7,27 +7,37 @@
   <view class="role">{{roleLabel}} · {{modeLabel}}</view>
 </view>
 <view class="page page-enter">
-  <view class="card" wx:if="{{context.mode === 'local'}}">
-    <view class="card-title">演示角色</view>
-    <view class="muted small desc">用于在开发者工具中预览三个角色看到的内容；云端正式模式不能随意切换身份。</view>
+  <view class="card" wx:if="{{context.mode === 'local' || context.canSwitchTestRole}}">
+    <view class="card-title">{{context.mode === 'local' ? '演示角色' : '测试角色'}}</view>
+    <view class="muted small desc">{{context.mode === 'local' ? '用于在开发者工具中预览三个角色看到的内容。' : '仅测试白名单账号可用；正式上线前请清空云函数中的测试白名单并重新部署。'}}</view>
     <view class="roles"><view wx:for="{{roles}}" wx:key="value" data-role="{{item.value}}" bindtap="switchRole" class="role-btn {{context.user.role === item.value ? 'active' : ''}}">{{item.label}}</view></view>
   </view>
-  <view class="card" wx:if="{{context.mode === 'cloud' && context.needsBinding}}">
-    <view class="card-title">绑定俱乐部身份</view>
-    <view class="muted small desc">向管理员获取家长或教练邀请码。</view>
+  <view class="card" wx:if="{{context.mode === 'cloud' && context.needsProfile}}">
+    <view class="card-title">注册学员</view>
+    <view class="muted small desc">普通学员可直接注册档案，注册后即可浏览并报名班级。</view>
+    <button class="btn-primary bind" bindtap="register">立即注册</button>
+  </view>
+  <view class="card" wx:if="{{context.mode === 'cloud' && (context.needsBinding || context.user.role === 'parent')}}">
+    <view class="card-title">使用邀请码</view>
+    <view class="muted small desc">教练使用班级邀请码；已有档案的学员可使用管理员提供的绑定码。</view>
     <input class="input" maxlength="6" type="number" placeholder="请输入6位邀请码" value="{{inviteCode}}" bindinput="inviteInput" />
     <button class="btn-primary bind" disabled="{{binding}}" loading="{{binding}}" bindtap="claimInvite">{{binding ? '正在绑定' : '立即绑定'}}</button>
   </view>
   <view class="card menu">
-    <view class="menu-item pressable" bindtap="sessions"><text>课程与班级报名</text><text class="muted">›</text></view>
+    <view class="menu-item pressable" bindtap="classes"><text>班级查询与报名</text><text class="muted">›</text></view>
+    <view class="menu-item pressable" bindtap="sessions"><text>课程与签到</text><text class="muted">›</text></view>
     <view class="menu-item pressable" bindtap="leaves"><text>{{context.user.role === 'parent' ? '我的请假' : '请假审核'}}</text><text class="muted">›</text></view>
-    <view class="menu-item pressable" wx:if="{{context.user.role !== 'coach'}}" bindtap="renewals"><text>续费与课时记录</text><text class="muted">›</text></view>
+    <view class="menu-item pressable" wx:if="{{context.user.role !== 'coach'}}" bindtap="orders"><text>课程订单与支付</text><text class="muted">›</text></view>
+    <view class="menu-item pressable" bindtap="notifications"><text>通知消息</text><text class="muted">›</text></view>
+    <view class="menu-item pressable" bindtap="news"><text>新闻公告</text><text class="muted">›</text></view>
     <view class="menu-item pressable" wx:if="{{context.user.role !== 'parent'}}" bindtap="operations"><text>南联运营后台</text><text class="muted">›</text></view>
-    <view class="menu-item pressable" wx:if="{{context.user.role === 'admin'}}" bindtap="classes"><text>班级与教练管理</text><text class="muted">›</text></view>
+    <view class="menu-item pressable" wx:if="{{context.user.role !== 'parent'}}" bindtap="classes"><text>班级管理</text><text class="muted">›</text></view>
+    <view class="menu-item pressable" wx:if="{{context.user.role === 'admin'}}" bindtap="accounts"><text>账号与管理员</text><text class="muted">›</text></view>
+    <view class="menu-item pressable" wx:if="{{context.user.role === 'admin'}}" bindtap="commerce"><text>课程定价与优惠券</text><text class="muted">›</text></view>
     <view class="menu-item"><text>数据模式</text><text class="muted">{{modeLabel}}</text></view>
-    <view class="menu-item"><text>版本</text><text class="muted">南联 V2</text></view>
+    <view class="menu-item"><text>版本</text><text class="muted">正式运营版</text></view>
   </view>
   <button wx:if="{{context.mode === 'local'}}" class="btn-secondary" bindtap="reset">重置演示数据</button>
-  <view class="tip">正式启用前，需要部署新版 clubApi、配置管理员 OPENID、数据库索引与未成年人隐私授权。当前续费仍为人工确认到账。</view>
+  <view class="tip">测试角色入口仅对白名单账号开放。正式发布前须关闭测试白名单，并完成定位、未成年人信息和支付相关隐私配置。</view>
 </view>
 </block>

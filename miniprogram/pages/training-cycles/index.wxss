@@ -1,2 +1,0 @@
-.notice{background:#fff3e2;color:#80561c;padding:20rpx;border-radius:18rpx;margin-bottom:20rpx}.title{font-size:31rpx;font-weight:800}.primary{margin:20rpx 0;color:#12643b;font-weight:700}.weeks view{display:flex;gap:20rpx;padding:14rpx;border-top:1rpx solid #edf0f5}.weeks text:first-child{width:110rpx;color:#7a817d}
-.focus{line-height:1.65}.meeting{margin-top:18rpx;background:#fff3e2;color:#80561c;padding:16rpx;border-radius:14rpx}

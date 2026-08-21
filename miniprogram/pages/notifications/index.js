@@ -1,0 +1,2 @@
+const api = require("../../utils/api");
+Page({ data: { rows: [], loading: true }, onShow() { this.load(); }, onPullDownRefresh() { this.load(); }, async load() { this.setData({ loading: true }); try { this.setData({ rows: await api.call("listNotifications"), loading: false }); } finally { wx.stopPullDownRefresh(); } }, async read(event) { const id = event.currentTarget.dataset.id; await api.call("markNotificationRead", { id }); this.setData({ rows: this.data.rows.map((item) => item.id === id ? { ...item, status: "READ" } : item) }); } });

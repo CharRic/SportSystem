@@ -1,1 +1,10 @@
 .field-help { color: #8a918d; font-size: 22rpx; line-height: 1.5; margin-top: 10rpx; }
+.readonly { color: #606a65; background: #f3f5f4; }
+.schedule-slot { display: flex; align-items: center; gap: 10rpx; margin-top: 14rpx; }
+.weekday-picker { width: 150rpx; }.time-picker { flex: 1; min-width: 0; }
+.picker.compact { box-sizing: border-box; min-width: 0; padding: 18rpx 12rpx; text-align: center; }
+.time-separator { flex: none; color: #7a817d; font-size: 23rpx; }
+.remove-slot { flex: none; color: #c34a3d; font-size: 23rpx; padding: 14rpx 0 14rpx 8rpx; }
+.add-slot { display: flex; align-items: center; justify-content: center; margin-top: 16rpx; padding: 18rpx; border: 2rpx dashed #9aabc5; border-radius: 16rpx; color: #173b77; font-size: 25rpx; font-weight: 700; }
+.sticky-action { padding: 10rpx 0 calc(4rpx + env(safe-area-inset-bottom)); }
+.sticky-action .btn-primary { height: 72rpx; min-height: 72rpx; line-height: 72rpx; border-radius: 16rpx; font-size: 26rpx; }

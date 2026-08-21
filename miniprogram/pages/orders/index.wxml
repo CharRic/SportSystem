@@ -1,0 +1,19 @@
+<view class="page page-enter">
+  <view class="card" wx:if="{{role !== 'coach' && students.length && catalog.length}}">
+    <view class="card-title">购买课程</view>
+    <view class="field"><text class="field-label">学员</text><picker range="{{students}}" range-key="name" value="{{studentIndex}}" bindchange="student"><view class="picker">{{students[studentIndex].name}}</view></picker></view>
+    <view class="field"><text class="field-label">教练与课程类型</text><picker range="{{catalog}}" range-key="displayName" value="{{catalogIndex}}" bindchange="catalog"><view class="picker">{{catalog[catalogIndex].displayName}}</view></picker></view>
+    <view class="field"><text class="field-label">优惠券编码</text><input class="input" value="{{couponCode}}" bindinput="coupon" placeholder="没有可不填"/></view>
+    <button class="btn-primary" loading="{{creating}}" bindtap="create">创建支付订单</button>
+  </view>
+  <view class="notice" wx:if="{{role !== 'coach' && !loading && (!students.length || !catalog.length)}}">请先注册学员，并由管理员配置“教练 + 课程类型”价格。</view>
+  <view class="section-title">{{role === 'admin' ? '全部订单' : '我的订单'}}</view>
+  <view class="loading-state" wx:if="{{loading}}">加载中...</view>
+  <view class="card order" wx:for="{{orders}}" wx:key="id">
+    <view class="between"><view><view class="order-title">{{item.courseTypeName}}</view><view class="muted small">{{item.studentName}} · {{item.orderNo}}</view></view><view class="amount">¥{{item.amountYuan}}</view></view>
+    <view class="between footer"><text class="tag">{{item.status === 'PAID' ? '已支付' : '待支付'}}</text><text class="muted small">{{item.createdAt}}</text></view>
+    <button wx:if="{{role === 'parent' && item.status === 'PENDING_PAYMENT'}}" class="btn-primary confirm" loading="{{paying === item.id}}" data-id="{{item.id}}" bindtap="pay">微信支付</button>
+    <button wx:if="{{role === 'admin' && item.status === 'PENDING_PAYMENT'}}" class="btn-secondary confirm" loading="{{confirming === item.id}}" data-id="{{item.id}}" bindtap="confirm">人工确认到账</button>
+  </view>
+  <view class="empty card" wx:if="{{!loading && orders.length === 0}}">暂无订单</view>
+</view>

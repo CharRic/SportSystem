@@ -1,20 +1,13 @@
 App({
   onLaunch() {
     this.globalData = {
-      // 填入云开发环境 ID 后自动切换为多人共享的云端数据。
-      // 留空时使用本地演示数据，便于直接在开发者工具预览。
-      env: "",
-      dataMode: "local",
-      previewRole: wx.getStorageSync("previewRole") || "admin",
+      // 正式测试版只连接云端，不再回退到本地演示数据。
+      env: "cloud1-d2g4gi77g48dcee01",
+      dataMode: "cloud",
       activeStudentId: wx.getStorageSync("activeStudentId") || "",
     };
 
-    if (wx.cloud && this.globalData.env) {
-      wx.cloud.init({
-        env: this.globalData.env,
-        traceUser: true,
-      });
-      this.globalData.dataMode = "cloud";
-    }
+    if (!wx.cloud) throw new Error("当前基础库不支持云开发，请升级微信开发者工具");
+    wx.cloud.init({ env: this.globalData.env, traceUser: true });
   },
 });

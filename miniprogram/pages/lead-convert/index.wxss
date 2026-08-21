@@ -1,2 +1,0 @@
-.info{margin-top:18rpx}.check{display:block;padding:18rpx 0;border-bottom:1rpx solid #edf0ee}.notice{background:#fff6da;color:#80610d;padding:20rpx;border-radius:16rpx;font-size:23rpx;line-height:1.6}
-.avatar-upload{width:156rpx;height:156rpx;border-radius:50%;margin:12rpx auto;border:2rpx dashed #86a695;background:#f4f8f5;color:#12643b;display:flex;align-items:center;justify-content:center;text-align:center;font-size:23rpx;overflow:hidden}.avatar-upload image{width:100%;height:100%}.photo-help{text-align:center}

@@ -4,8 +4,6 @@ const classesV3 = require("./class-domain");
 const growth = require("./growth-domain");
 const league = require("./league-domain");
 const family = require("./family-domain");
-const finance = require("./finance-domain");
-const training = require("./training-domain");
 
 const STORAGE_KEY = "nanlianClubV2";
 const PACKAGES = {
@@ -24,9 +22,9 @@ function seed() {
     students: [
       { id: "s1", name: "陈小南", avatarUrl: "/images/avatar.png", gender: "男", birthDate: "2017-03-18", guardianName: "陈女士", guardianPhone: "13800001203", emergencyContact: "陈先生 13900001203", healthNotes: "无", remainingLessons: 19, totalLessons: 28, classIds: ["cu7base", "c1718"], status: "active" },
       { id: "s2", name: "周子航", avatarUrl: "/images/avatar.png", gender: "男", birthDate: "2017-11-02", guardianName: "周先生", guardianPhone: "13600009081", emergencyContact: "周女士 13700009081", healthNotes: "左膝旧伤，训练前加强热身", remainingLessons: 4, totalLessons: 28, classIds: ["cu7base", "c1718"], status: "active" },
-      { id: "s3", name: "林一诺", gender: "女", birthDate: "2016-07-09", guardianName: "林女士", guardianPhone: "13900006618", emergencyContact: "林先生 13800006618", healthNotes: "无", remainingLessons: 5, totalLessons: 14, classIds: ["cu8advanced", "c1516"], status: "active" },
+      { id: "s3", name: "林一诺", gender: "女", birthDate: "2016-07-09", guardianName: "林女士", guardianPhone: "13900006618", emergencyContact: "林先生 13800006618", healthNotes: "无", remainingLessons: 11, totalLessons: 14, classIds: ["cu8advanced", "c1516"], status: "active" },
       { id: "s4", name: "王奕辰", gender: "男", birthDate: "2019-09-23", guardianName: "王先生", guardianPhone: "13700004329", emergencyContact: "王女士 13600004329", healthNotes: "近期脚踝轻微不适", remainingLessons: 2, totalLessons: 14, classIds: ["cinterest"], status: "active" },
-      { id: "s-growth", name: "王小明", avatarUrl: "/images/nanlian-logo.png", gender: "男", birthDate: "2017-05-12", guardianName: "王女士", guardianPhone: "13800008888", emergencyContact: "王先生 13900008888", healthNotes: "无", remainingLessons: 3, totalLessons: 28, classIds: ["cu8advanced", "c1516"], registrationDate: "2025-05-10", status: "active" }
+      { id: "s-growth", name: "王小明", avatarUrl: "/images/nanlian-logo.png", gender: "男", birthDate: "2017-05-12", guardianName: "王女士", guardianPhone: "13800008888", emergencyContact: "王先生 13900008888", healthNotes: "无", remainingLessons: 18, totalLessons: 28, classIds: ["cu8advanced", "c1516"], registrationDate: "2025-05-10", status: "active" }
       , ...demoStudents
     ],
     classes: [
@@ -78,8 +76,6 @@ function load() {
   growth.ensure(data);
   league.ensure(data);
   family.ensure(data, { stamp });
-  finance.ensure(data, { stamp });
-  training.ensure(data);
   save(data);
   return data;
 }
@@ -87,7 +83,7 @@ function save(data) { wx.setStorageSync(STORAGE_KEY, data); }
 function uid(prefix) { return `${prefix}${Date.now()}${Math.floor(Math.random() * 1000)}`; }
 function stamp() { return `${today()} ${new Date().toTimeString().slice(0, 5)}`; }
 function assertRole(role, allowed) { if (!allowed.includes(role)) throw new Error("没有执行该操作的权限"); }
-function roleClassIds(data, role) { return role === "coach" ? ["c1718", "c1516", "cu7base", "cu8advanced"] : data.classes.map((item) => item.id); }
+function roleClassIds(data, role, userId = "coach1") { return role === "coach" ? (((data.users || []).find((item) => item.id === userId) || {}).classIds || []) : data.classes.map((item) => item.id); }
 function visibleStudents(data, role, userId = "parent1") {
   if (role === "admin") return data.students;
   if (role === "parent") { const ids = family.linkedIds(data, userId); return data.students.filter((item) => ids.includes(item.id)); }
@@ -146,14 +142,12 @@ async function call(action, input = {}) {
   const userRecord = (data.users || []).find((item) => item.id === userId);
   const userName = (userRecord || {}).name || (role === "admin" ? "南联管理员" : role === "coach" ? "游导" : "待绑定家长");
   const ownStudentId = visibleStudents(data, role, userId)[0] && visibleStudents(data, role, userId)[0].id;
-  const classContext = { data, role, userId, userName, uid, stamp, canAccessStudent: (studentId) => canAccessStudent(data, role, studentId, userId), visibleStudents: () => visibleStudents(data, role, userId), canAccessClass: (classId) => role === "admin" || roleClassIds(data, role).includes(classId), appendLedger: (studentId, delta, type, referenceType, referenceId, note) => appendLedger(data, studentId, delta, type, referenceType, referenceId, note), audit: (nextAction, targetType, targetId, detail) => audit(data, role, nextAction, targetType, targetId, detail), save: () => save(data) };
+  const classContext = { data, role, userId, userName, uid, stamp, canAccessStudent: (studentId) => canAccessStudent(data, role, studentId, userId), canAccessClass: (classId) => role === "admin" || roleClassIds(data, role).includes(classId), audit: (nextAction, targetType, targetId, detail) => audit(data, role, nextAction, targetType, targetId, detail), save: () => save(data) };
   if (classesV3.handles(action)) return classesV3.call(action, input, classContext);
-  if (crm.handles(action)) return crm.call(action, input, { data, role, userId, userName, today: today(), uid, stamp, audit, save, packages: PACKAGES, createStudent: async (student) => { const classIds = student.classIds || []; const result = saveStudentRecord(data, { ...student, classIds: [] }); for (const classId of classIds) await classesV3.call("addClassMember", { classId, studentId: result.id, source: "ADMIN_ADD", confirmCapacity: true, remark: "CRM转正式学员编班" }, classContext); return result; }, createFinanceOrder: (financeInput) => finance.call("createOrder", financeInput, classContext) });
+  if (crm.handles(action)) return crm.call(action, input, { data, role, userId, userName, today: today(), uid, stamp, audit, save, packages: PACKAGES, createStudent: async (student) => { const classIds = student.classIds || []; const result = saveStudentRecord(data, { ...student, classIds: [] }); for (const classId of classIds) await classesV3.call("addClassMember", { classId, studentId: result.id, source: "ADMIN_ADD", confirmCapacity: true, remark: "CRM转正式学员编班" }, classContext); return result; } });
   if (growth.handles(action)) return growth.call(action, input, classContext);
   if (league.handles(action)) return league.call(action, input, classContext);
   if (family.handles(action)) return family.call(action, input, classContext);
-  if (finance.handles(action)) return finance.call(action, input, classContext);
-  if (training.handles(action)) return training.call(action, input, classContext);
   switch (action) {
     case "getContext": return { mode: "local", user: { id: userId, name: userName, role }, needsBinding: false };
     case "getDashboard": {
@@ -185,12 +179,31 @@ async function call(action, input = {}) {
     case "listClasses": {
       return data.classes.filter((item) => item.status === "ACTIVE" && (role === "admin" || role === "parent" || roleClassIds(data, role).includes(item.id))).map((item) => classesV3.decorateClass(data, item));
     }
-    case "getClass": assertRole(role, ["admin"]); return classesV3.decorateClass(data, data.classes.find((item) => item.id === input.id));
+    case "listClassCoaches": {
+      assertRole(role, ["admin", "coach"]);
+      const coaches = (data.users || []).filter((item) => item.role === "coach");
+      return (role === "coach" ? coaches.filter((item) => item.id === userId) : coaches).map((item) => ({ id: item.id, name: item.name }));
+    }
+    case "getClass": {
+      assertRole(role, ["admin", "coach"]); const clubClass = data.classes.find((item) => item.id === input.id);
+      if (!clubClass) throw new Error("班级不存在");
+      if (role === "coach" && !roleClassIds(data, role, userId).includes(clubClass.id)) throw new Error("无权编辑该班级");
+      return classesV3.decorateClass(data, clubClass);
+    }
     case "saveClass": {
-      assertRole(role, ["admin"]); const payload = input.clubClass; let classId = payload.id;
-      const normalized = { ...payload, classType: payload.classType === "ELITE" ? "ELITE" : "REGULAR", ageGroup: String(payload.ageGroup || "").trim(), standardCapacity: Math.max(1, Number(payload.standardCapacity || 20)), headCoachName: String(payload.headCoachName || payload.coachName || "").trim(), coachName: String(payload.headCoachName || payload.coachName || "").trim(), assistantCoachName: String(payload.assistantCoachName || "").trim(), schedule: String(payload.schedule || "").trim(), venue: String(payload.venue || "").trim(), status: payload.status === "INACTIVE" ? "INACTIVE" : "ACTIVE", active: payload.status !== "INACTIVE", remark: String(payload.remark || "").trim() };
+      assertRole(role, ["admin", "coach"]); const payload = input.clubClass; let classId = payload.id;
+      const previous = classId && data.classes.find((item) => item.id === classId);
+      if (role === "coach" && previous && !roleClassIds(data, role, userId).includes(classId)) throw new Error("无权编辑该班级");
+      const headCoachUserId = role === "coach" ? userId : String(payload.headCoachUserId || "");
+      const headCoach = (data.users || []).find((item) => item.id === headCoachUserId && item.role === "coach");
+      if (!headCoach) throw new Error("请选择已绑定的主教练");
+      const scheduleSlots = Array.isArray(payload.scheduleSlots) ? payload.scheduleSlots.map((slot) => ({ weekday: String(slot.weekday || ""), startTime: String(slot.startTime || ""), endTime: String(slot.endTime || "") })).filter((slot) => slot.weekday && slot.startTime && slot.endTime && slot.startTime < slot.endTime) : [];
+      const schedule = scheduleSlots.length ? scheduleSlots.map((slot) => `${slot.weekday} ${slot.startTime}-${slot.endTime}`).join(" / ") : String(payload.schedule || "").trim();
+      const normalized = { ...payload, classType: payload.classType === "ELITE" ? "ELITE" : "REGULAR", ageGroup: String(payload.ageGroup || "").trim(), standardCapacity: Math.max(1, Number(payload.standardCapacity || 20)), headCoachUserId, coachUserId: headCoachUserId, headCoachName: headCoach.name, coachName: headCoach.name, assistantCoachName: String(payload.assistantCoachName || "").trim(), schedule, scheduleSlots, venue: String(payload.venue || "").trim(), status: payload.status === "INACTIVE" ? "INACTIVE" : "ACTIVE", active: payload.status !== "INACTIVE", remark: String(payload.remark || "").trim() };
       if (!normalized.name || !normalized.ageGroup || !normalized.headCoachName || !normalized.schedule || !normalized.venue) throw new Error("请完整填写班级信息");
-      const previous = classId && data.classes.find((item) => item.id === classId); const previousType = previous && previous.classType; const isNew = !classId; if (classId) Object.assign(previous, normalized); else { classId = uid("c"); data.classes.push({ ...normalized, id: classId, studentIds: [] }); }
+      const previousType = previous && previous.classType; const previousCoachUserId = previous && (previous.headCoachUserId || previous.coachUserId); const isNew = !classId; if (classId) Object.assign(previous, normalized); else { classId = uid("c"); data.classes.push({ ...normalized, id: classId, studentIds: [] }); }
+      headCoach.classIds = [...new Set([...(headCoach.classIds || []), classId])];
+      if (previousCoachUserId && previousCoachUserId !== headCoachUserId) { const oldCoach = (data.users || []).find((item) => item.id === previousCoachUserId); if (oldCoach) oldCoach.classIds = (oldCoach.classIds || []).filter((id) => id !== classId); }
       audit(data, role, previousType && previousType !== normalized.classType ? "changeClassType" : isNew ? "createClass" : "saveClass", "class", classId, { operator: userId, toClassId: classId, reason: normalized.name }); save(data); return { id: classId };
     }
     case "listSessions": {
@@ -273,7 +286,7 @@ async function call(action, input = {}) {
     case "confirmRenewal": { assertRole(role, ["admin"]); const renewal = data.renewals.find((item) => item.id === input.id); if (!renewal || renewal.status !== "pending") throw new Error("订单状态已变化"); renewal.status = "paid"; renewal.paidAt = stamp(); const student = data.students.find((item) => item.id === renewal.studentId); student.totalLessons += renewal.lessons; appendLedger(data, renewal.studentId, renewal.lessons, "purchase", "renewal", renewal.id, `${renewal.name || "课包"}到账`); audit(data, role, "confirmRenewal", "renewal", renewal.id, `${renewal.amount}元`); save(data); return { ok: true }; }
     case "createInvite": assertRole(role, ["admin"]); return { code: "演示模式" };
     case "claimInvite": return { ok: true };
-    case "resetDemo": { const demo = seed(); crm.ensure(demo, today()); classesV3.ensure(demo, { uid, stamp }); growth.ensure(demo); league.ensure(demo); family.ensure(demo, { stamp }); finance.ensure(demo, { stamp }); training.ensure(demo); wx.setStorageSync(STORAGE_KEY, demo); return { ok: true }; }
+    case "resetDemo": { const demo = seed(); crm.ensure(demo, today()); wx.setStorageSync(STORAGE_KEY, demo); return { ok: true }; }
     default: throw new Error(`暂不支持操作：${action}`);
   }
 }

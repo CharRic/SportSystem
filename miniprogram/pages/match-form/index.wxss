@@ -1,2 +1,0 @@
-.notice{background:#fff5df;color:#8a631c;padding:18rpx;border-radius:14rpx;font-size:22rpx;line-height:1.6;margin-bottom:18rpx}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12rpx}
-.selected-student{display:flex;align-items:center;gap:20rpx}.student-photo{width:92rpx;height:92rpx;border-radius:50%;object-fit:cover;flex:0 0 auto}.student-photo.fallback{display:flex;align-items:center;justify-content:center;background:#e9f5ee;color:#12643b;font-weight:800}.student-name{font-size:31rpx;font-weight:800}

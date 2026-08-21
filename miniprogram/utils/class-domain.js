@@ -29,11 +29,14 @@ function ensure(data, ctx) {
     clubClass.ageGroup = clubClass.ageGroup || clubClass.group || "待补充";
     clubClass.standardCapacity = Math.max(1, Number(clubClass.standardCapacity || clubClass.capacity || 20));
     clubClass.headCoachName = clubClass.headCoachName || clubClass.coachName || "待安排";
+    clubClass.headCoachUserId = clubClass.headCoachUserId || clubClass.coachUserId || "";
     clubClass.coachName = clubClass.headCoachName;
     clubClass.assistantCoachName = clubClass.assistantCoachName || "";
     clubClass.status = clubClass.status || (clubClass.active === false ? "INACTIVE" : "ACTIVE");
     clubClass.active = clubClass.status === "ACTIVE";
     clubClass.remark = clubClass.remark || "";
+    const coach = (data.users || []).find((item) => item.id === clubClass.headCoachUserId && item.role === "coach");
+    if (coach) coach.classIds = [...new Set([...(coach.classIds || []), clubClass.id])];
   });
   const pairs = new Set();
   data.students.forEach((student) => (student.classIds || []).forEach((classId) => pairs.add(`${classId}|${student.id}`)));
@@ -57,7 +60,7 @@ function decorateClass(data, clubClass) {
 
 function assertClassAccess(data, role, userId, classId) {
   if (role === "admin") return;
-  if (role === "coach" && (userId === "coach1" ? ["c1718", "c1516", "cu7base", "cu8advanced"] : []).includes(classId)) return;
+  if (role === "coach" && ((((data.users || []).find((item) => item.id === userId) || {}).classIds) || []).includes(classId)) return;
   if (role === "parent" && getClass(data, classId) && getClass(data, classId).status === "ACTIVE") return;
   throw new Error("无权查看该班级");
 }

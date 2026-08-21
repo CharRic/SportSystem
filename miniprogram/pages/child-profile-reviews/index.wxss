@@ -1,1 +1,0 @@
-.row{display:flex;align-items:center;gap:16rpx}.avatar{width:80rpx;height:80rpx;border-radius:50%}.headline{font-size:32rpx;font-weight:800}.private{padding:18rpx;margin:20rpx 0;border-radius:16rpx;background:#fff4e8}.warning-text{color:#a75b00;margin-top:14rpx}.actions{display:grid;grid-template-columns:1fr 1fr;gap:14rpx;margin-top:22rpx}.actions button{margin:0}

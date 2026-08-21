@@ -11,7 +11,7 @@ function seed() {
     students: [
       { id: "s1", name: "林一诺", gender: "男", birthDate: "2016-03-18", guardianName: "林女士", guardianPhone: "138****1203", healthNotes: "无", remainingLessons: 18, totalLessons: 30, classIds: ["c1"], status: "active" },
       { id: "s2", name: "周子航", gender: "男", birthDate: "2015-11-02", guardianName: "周先生", guardianPhone: "136****9081", healthNotes: "左膝旧伤，训练前注意热身", remainingLessons: 4, totalLessons: 20, classIds: ["c1"], status: "active" },
-      { id: "s3", name: "陈思琪", gender: "女", birthDate: "2017-07-09", guardianName: "陈女士", guardianPhone: "139****6618", healthNotes: "无", remainingLessons: 5, totalLessons: 20, classIds: ["c2"], status: "active" },
+      { id: "s3", name: "陈思琪", gender: "女", birthDate: "2017-07-09", guardianName: "陈女士", guardianPhone: "139****6618", healthNotes: "无", remainingLessons: 11, totalLessons: 20, classIds: ["c2"], status: "active" },
       { id: "s4", name: "王奕辰", gender: "男", birthDate: "2016-09-23", guardianName: "王先生", guardianPhone: "137****4329", healthNotes: "近期脚踝轻微不适", remainingLessons: 2, totalLessons: 20, classIds: ["c2"], status: "active" }
     ],
     classes: [

@@ -1,11 +1,14 @@
 <view class="page page-enter">
-  <view class="hint">班级用于维护教练和学员关系；逐节训练、报名和点名统一在课程页面完成。</view>
+  <view class="search-box"><input class="input" value="{{keyword}}" bindinput="keyword" confirm-type="search" bindconfirm="search" placeholder="按班级号、班级名或教练搜索"/><button size="mini" class="btn-primary" bindtap="search">搜索</button></view>
+  <view class="class-actions" wx:if="{{role === 'admin' || role === 'coach'}}">
+    <view class="create-pill pressable" bindtap="add"><text class="create-plus">＋</text>创建班级</view>
+  </view>
   <view class="loading-state" wx:if="{{loading}}"><text class="loading-dot"></text><text class="loading-dot"></text><text class="loading-dot"></text></view>
   <view class="error-state" wx:elif="{{error}}">{{error}}<view class="retry" bindtap="load">重新加载</view></view>
   <block wx:else>
   <view class="card class-card pressable" wx:for="{{classes}}" wx:key="id" data-id="{{item.id}}" bindtap="open">
     <view class="top between">
-      <view><view class="name">{{item.name}}</view><view class="row"><view class="tag {{item.classType === 'ELITE' ? 'gold' : ''}}">{{item.classTypeLabel}}</view><view class="tag">{{item.headCoachName || item.coachName}}</view><text class="edit" wx:if="{{role === 'admin'}}" data-id="{{item.id}}" catchtap="edit">编辑</text><text class="edit" wx:if="{{role === 'admin' && mode === 'cloud'}}" data-id="{{item.id}}" catchtap="coachInvite">教练邀请码</text></view></view>
+      <view><view class="name">{{item.name}} <text class="class-code">{{item.classCode}}</text></view><view class="row"><view class="tag">普通班</view><view class="tag">{{item.headCoachName || item.coachName}}</view><text class="edit" wx:if="{{role === 'admin' || role === 'coach'}}" data-id="{{item.id}}" catchtap="edit">编辑</text><text class="edit" wx:if="{{role === 'admin' && mode === 'cloud' && !item.headCoachUserId}}" data-id="{{item.id}}" catchtap="coachInvite">教练邀请码</text></view></view>
       <view class="member"><text>{{item.studentCount}} / {{item.standardCapacity}}</text><text class="small muted">当前 / 标准</text></view>
     </view>
     <view class="divider"></view>
@@ -15,7 +18,6 @@
     <view class="capacity-note {{item.overCapacity ? 'over' : ''}}">{{item.overCapacity ? '已超标准容量 '+item.overCapacity+' 人' : item.enrollmentLabel}}</view>
     <button wx:if="{{role !== 'parent'}}" class="btn-primary take" data-id="{{item.id}}" bindtap="attendance">查看课程</button>
   </view>
-  <view class="empty card" wx:if="{{classes.length === 0}}">{{role === 'admin' ? '还没有班级，创建后即可分配教练和学员' : '暂未分配班级'}}<view class="retry" wx:if="{{role === 'admin'}}" bindtap="add">创建班级</view></view>
+  <view class="empty card" wx:if="{{classes.length === 0}}">当前还没有班级</view>
   </block>
-  <floating-add-button wx:if="{{role === 'admin'}}" bind:add="add" />
 </view>

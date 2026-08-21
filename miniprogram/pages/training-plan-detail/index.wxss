@@ -1,1 +1,0 @@
-.notice{background:#fff3e2;color:#80561c;padding:20rpx;border-radius:18rpx;margin-bottom:20rpx}.date-row{display:grid;grid-template-columns:1fr 1fr;gap:12rpx}.actions{display:grid;grid-template-columns:1fr 1fr;gap:12rpx}

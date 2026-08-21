@@ -1,0 +1,1 @@
+.header{margin-bottom:28rpx}.title{font-size:40rpx;font-weight:800}.news{display:flex;gap:22rpx}.news image{width:180rpx;height:130rpx;border-radius:16rpx}.news-title{font-size:31rpx;font-weight:750}.meta{margin:8rpx 0}.summary{line-height:1.6}.content{margin-top:16rpx;line-height:1.75;white-space:pre-wrap;color:#4f5752}

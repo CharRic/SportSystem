@@ -2,7 +2,7 @@ const api = require("../../utils/api");
 const { chooseStudentPhoto } = require("../../utils/student-photo");
 
 Page({
-  data: { profile: { avatarUrl: "", name: "", gender: "男", birthDate: "2018-01-01", idCardNumber: "", school: "", grade: "", remark: "", relationship: "GUARDIAN" }, saving: false, uploading: false },
+  data: { profile: { avatarUrl: "", name: "", gender: "男", birthDate: "2018-01-01", mobile: "", guardianName: "", school: "", grade: "", remark: "", relationship: "GUARDIAN" }, saving: false, uploading: false },
   field(event) { this.setData({ [`profile.${event.currentTarget.dataset.key}`]: event.detail.value }); },
   date(event) { this.setData({ "profile.birthDate": event.detail.value }); },
   gender(event) { this.setData({ "profile.gender": event.detail.value }); },
@@ -15,11 +15,12 @@ Page({
   },
   async save() {
     if (this.data.saving) return;
-    if (!this.data.profile.avatarUrl) return wx.showToast({ title: "请先上传孩子本人照片", icon: "none" });
+    const profile = this.data.profile;
+    if (!profile.name.trim() || !/^1\d{10}$/.test(profile.mobile)) return wx.showToast({ title: "请填写姓名和正确手机号", icon: "none" });
     this.setData({ saving: true });
     try {
-      const result = await api.call("submitChildProfile", { profile: this.data.profile });
-      wx.showModal({ title: "资料已提交", content: result.duplicateFound ? "发现可能已存在的学员档案，管理员将审核后绑定，不会重复创建。" : "管理员确认后，孩子会出现在你的学员列表中。", showCancel: false, success: () => wx.navigateBack() });
+      await api.call("registerMember", { profile });
+      wx.showModal({ title: "注册成功", content: "学员档案已经创建，现在可以查询并报名班级。", showCancel: false, success: () => wx.navigateBack() });
     } finally { this.setData({ saving: false }); }
   },
 });

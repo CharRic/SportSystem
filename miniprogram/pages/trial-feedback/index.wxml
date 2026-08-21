@@ -1,6 +1,0 @@
-<view class="page page-enter" wx:if="{{trial}}">
-  <view class="card"><view class="lead-name">{{trial.childName}}</view><view class="muted small lead-meta">{{trial.trialDate}} · {{trial.className}} · {{trial.coachName}}</view></view>
-  <view class="score-grid"><view class="score-item" wx:for="{{fields}}" wx:key="key"><view class="score-label">{{item.label}}</view><view class="score-options"><text wx:for="{{scoreValues}}" wx:for-item="value" wx:key="*this" class="score {{scores[item.key] === value ? 'active' : ''}}" data-key="{{item.key}}" data-value="{{value}}" bindtap="score">{{value}}</text></view></view></view>
-  <view class="card feedback-card"><view class="field"><text class="field-label">综合评价 *</text><textarea class="textarea" value="{{summary}}" bindinput="summary" placeholder="描述孩子适应情况和下一步建议"/></view><view class="field"><text class="field-label">推荐班级</text><picker range="{{classes}}" range-key="name" value="{{recommendedIndex}}" bindchange="recommended"><view class="picker">{{classes.length ? classes[recommendedIndex].name : '暂不推荐'}}</view></picker></view></view>
-  <button class="btn-primary" loading="{{saving}}" bindtap="save">保存体验课反馈</button>
-</view>

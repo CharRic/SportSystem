@@ -1,2 +1,0 @@
-const api = require("../../utils/api");
-Page({ data: { rows: [], role: "coach", loading: true }, onShow() { this.load(); }, async load() { this.setData({ loading: true }); const [context, rows] = await Promise.all([api.call("getContext"), api.call("listAssessmentRounds")]); this.setData({ role: context.user.role, rows, loading: false }); }, open(event) { wx.navigateTo({ url: `/pages/assessment-round-detail/index?id=${event.currentTarget.dataset.id}` }); }, add() { wx.navigateTo({ url: "/pages/assessment-round-form/index" }); } });

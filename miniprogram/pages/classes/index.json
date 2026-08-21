@@ -1,1 +1,1 @@
-{ "navigationBarTitleText": "班级与点名", "enablePullDownRefresh": true, "usingComponents": { "floating-add-button": "/components/floating-add-button/index" } }
+{ "navigationBarTitleText": "班级管理", "enablePullDownRefresh": true }

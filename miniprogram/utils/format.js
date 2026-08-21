@@ -1,4 +1,4 @@
-const roleLabels = { admin: "管理员", coach: "教练员", parent: "家长" };
+const roleLabels = { admin: "管理员", coach: "教练员", parent: "学员端" };
 const attendanceLabels = { present: "到课", leave: "请假", sick: "伤病", absent: "缺勤" };
 
 function dateText(value) {

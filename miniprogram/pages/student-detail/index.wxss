@@ -7,5 +7,3 @@
 .elite-action{margin:18rpx 0}
 .growth-entry{display:flex;align-items:center;justify-content:space-between;border-left:8rpx solid #12643b}.growth-entry .card-title{color:#12643b}
 .photo-editable{overflow:hidden}.photo-tip{text-align:center;margin:-8rpx 0 18rpx}
-.finance-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rpx;background:#edf0f5;border-radius:16rpx;overflow:hidden}.finance-grid view{background:#f8fafc;padding:18rpx;text-align:center}.finance-grid text{display:block}.finance-grid text:first-child{font-weight:800;color:#173b77}.finance-grid text:last-child{font-size:20rpx;color:#8a94a5;margin-top:5rpx}.finance-order{padding:18rpx 0;border-bottom:1rpx solid #edf0f5}.adjustment{margin-top:20rpx}
-.family-row{display:flex;justify-content:space-between;gap:20rpx;padding:18rpx 0;border-bottom:1rpx solid #edf0f5}.family-row:last-of-type{border-bottom:0}

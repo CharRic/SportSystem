@@ -1,2 +1,0 @@
-const api = require("../../utils/api");
-Page({ data: { rows: [], loading: true }, onShow() { this.load(); }, async load() { this.setData({ loading: true, rows: await api.call("listProducts") }); this.setData({ loading: false }); }, add() { wx.navigateTo({ url: "/pages/product-form/index" }); }, edit(event) { wx.navigateTo({ url: `/pages/product-form/index?id=${event.currentTarget.dataset.id}` }); }, async toggle(event) { const id = event.currentTarget.dataset.id, active = event.detail.value; await api.call("toggleProduct", { id, active }); this.load(); } });
