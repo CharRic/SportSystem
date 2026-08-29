@@ -5,7 +5,7 @@ const EXIT_REASONS = ["年龄升级", "调整梯队", "训练表现", "长期缺
 const { coachReference } = require("./coach-profile-domain");
 
 const ACTIONS = [
-  "getClassMeta", "getClassDetail", "searchStudentsForClass", "addClassMember", "joinClass",
+  "getClassMeta", "getClassDetail", "getParentClassDetail", "searchStudentsForClass", "addClassMember", "joinClass",
   "removeClassMember", "transferClassMember", "listEliteSelections", "recommendElite",
   "reviewEliteSelection", "promoteToElite"
 ];
@@ -56,7 +56,25 @@ function ensure(data, ctx) {
 function decorateClass(data, clubClass) {
   const studentCount = activeMembers(data, clubClass.id).length;
   const standardCapacity = Math.max(1, Number(clubClass.standardCapacity || 20));
-  return { ...clubClass, headCoach: coachReference(data, clubClass.headCoachUserId || clubClass.coachUserId, clubClass.headCoachName || clubClass.coachName), assistantCoaches: (clubClass.assistantCoachIds || []).map((id) => coachReference(data, id, ((data.users || []).find((item) => item.id === id) || {}).name)), classTypeLabel: CLASS_TYPES[clubClass.classType] || clubClass.classType, studentCount, standardCapacity, remainingCapacity: Math.max(0, standardCapacity - studentCount), overCapacity: Math.max(0, studentCount - standardCapacity), isFull: studentCount >= standardCapacity, enrollmentLabel: clubClass.classType === "ELITE" ? "俱乐部选拔制" : studentCount >= standardCapacity ? "本班已满" : "可报名" };
+  const assistantCoaches = (clubClass.assistantCoachIds || []).map((id) => coachReference(data, id, ((data.users || []).find((item) => item.id === id) || {}).name));
+  if (!assistantCoaches.length && clubClass.assistantCoachName) String(clubClass.assistantCoachName).split(/[、,，]+/).map((item) => item.trim()).filter(Boolean).forEach((name) => assistantCoaches.push(coachReference(data, "", name)));
+  return { ...clubClass, headCoach: coachReference(data, clubClass.headCoachUserId || clubClass.coachUserId, clubClass.headCoachName || clubClass.coachName), assistantCoaches, classTypeLabel: CLASS_TYPES[clubClass.classType] || clubClass.classType, studentCount, standardCapacity, remainingCapacity: Math.max(0, standardCapacity - studentCount), overCapacity: Math.max(0, studentCount - standardCapacity), isFull: studentCount >= standardCapacity, enrollmentLabel: clubClass.classType === "ELITE" ? "俱乐部选拔制" : studentCount >= standardCapacity ? "本班已满" : "可报名" };
+}
+
+function parentClassSummary(data, clubClass) {
+  const decorated = decorateClass(data, clubClass);
+  return { id: decorated.id, name: decorated.name, classCode: decorated.classCode || "", classType: decorated.classType, classTypeLabel: decorated.classTypeLabel, ageGroup: decorated.ageGroup || "", schedule: decorated.schedule || "", venue: decorated.venue || "", headCoach: decorated.headCoach, assistantCoaches: decorated.assistantCoaches || [], studentCount: decorated.studentCount, canViewRoster: false, classmates: [], upcomingSessions: [] };
+}
+
+function parentClassDetail(data, classId, ctx) {
+  if (ctx.role !== "parent") throw new Error("仅家长可读取家长版班级详情");
+  const ownIds = new Set((data.students || []).filter((student) => ctx.canAccessStudent(student.id)).map((student) => student.id));
+  if (!activeMembers(data, classId).some((member) => ownIds.has(member.studentId))) throw new Error("无权查看该班级成员名单");
+  const clubClass = getClass(data, classId); if (!clubClass || clubClass.status === "INACTIVE") throw new Error("班级不存在或已停用");
+  const classmates = activeMembers(data, classId).map((member) => { const student = getStudent(data, member.studentId) || {}; return { studentId: member.studentId, displayName: String(student.name || "学员"), avatarUrl: String(student.avatarUrl || "") }; });
+  const today = ctx.stamp().slice(0, 10);
+  const upcomingSessions = (data.sessions || []).filter((session) => session.classId === classId && (session.publishStatus === "PUBLISHED" || ["published", "COMPLETED", "CANCELLED"].includes(session.status)) && session.date >= today && session.status !== "CANCELLED").sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`)).slice(0, 6).map((session) => { const assignments = (session.actualCoachAssignments || []).length ? session.actualCoachAssignments : session.plannedCoachAssignments || [], primary = assignments.find((item) => item.role === "HEAD") || assignments[0] || {}; return { sessionId: session.id, date: session.date || "", weekday: session.weekday || "", time: session.time || "", venue: session.venue || "", trainingTheme: session.trainingTheme || session.title || "", coach: coachReference(data, primary.coachId || session.coachUserId || clubClass.headCoachUserId || clubClass.coachUserId, primary.coachId ? "" : session.coachName || clubClass.headCoachName || clubClass.coachName) }; });
+  return { ...parentClassSummary(data, clubClass), canViewRoster: true, studentCount: classmates.length, classmates, upcomingSessions };
 }
 
 function assertClassAccess(data, role, userId, classId) {
@@ -120,9 +138,11 @@ async function call(action, input, ctx) {
   if (action === "getClassDetail") {
     assertClassAccess(data, role, userId, input.id);
     const clubClass = getClass(data, input.id); if (!clubClass) throw new Error("班级不存在");
+    if (role === "parent") return parentClassSummary(data, clubClass);
     const members = role === "parent" ? [] : (data.classMembers || []).filter((item) => item.classId === clubClass.id && (input.includeInactive || item.status === "ACTIVE")).sort((a, b) => String(a.joinedAt).localeCompare(String(b.joinedAt))).map((item) => memberView(data, item));
     return { ...decorateClass(data, clubClass), members, pendingSelectionCount: (data.eliteSelections || []).filter((item) => item.targetEliteClassId === clubClass.id && item.status === "PENDING").length };
   }
+  if (action === "getParentClassDetail") return parentClassDetail(data, input.id, ctx);
   if (action === "searchStudentsForClass") {
     if (role !== "admin") throw new Error("仅管理员可搜索并编班");
     const query = String(input.query || "").trim().toLowerCase();

@@ -1,17 +1,23 @@
 <view class="page page-enter">
   <view class="schedule-head brand-hero">
-  <view><view class="eyebrow">NANLIAN FOOTBALL CLUB</view><view class="title">训练课程</view><view class="sub">逐节发布 · 名额透明 · 满员停止报名</view></view>
+  <view><view class="eyebrow">NANLIAN FOOTBALL CLUB</view><view class="title">{{role === 'parent' ? '我的课表' : '训练课程'}}</view><view class="sub">{{role === 'parent' ? '班级归属与已发布训练安排' : '统一发布 · 统一管理'}}</view></view>
     <image class="logo" src="/images/nanlian-logo.png" mode="aspectFit" />
   </view>
   <picker wx:if="{{role === 'parent' && students.length > 1}}" mode="selector" range="{{students}}" range-key="name" value="{{studentIndex}}" bindchange="studentChange"><view class="card student-picker"><image wx:if="{{students[studentIndex].avatarUrl}}" src="{{students[studentIndex].avatarUrl}}" mode="aspectFill"/><view wx:else class="picker-fallback">{{students[studentIndex].initial}}</view><view class="grow"><view class="muted small">当前孩子</view><view>{{students[studentIndex].name}}</view></view><text>切换 ›</text></view></picker>
   <view class="loading-state" wx:if="{{loading}}"><text class="loading-dot"></text><text class="loading-dot"></text><text class="loading-dot"></text></view>
   <view class="error-state" wx:elif="{{error}}">{{error}}<view class="retry" bindtap="load">重新加载</view></view>
   <block wx:else>
-    <view class="section-title">近期课程</view>
+    <block wx:if="{{role === 'parent'}}">
+      <view class="section-title">我的班级</view>
+      <view class="card my-class pressable" wx:for="{{myClasses}}" wx:key="id" data-id="{{item.id}}" bindtap="openClass"><view class="between"><view><view class="name">{{item.name}}</view><view class="muted small class-meta">{{item.schedule || '训练时间待发布'}} · {{item.venue || '场地待发布'}}</view></view><view><view class="tag">{{item.classTypeLabel}}</view><view class="member-label">正式成员 · 查看详情 ›</view></view></view></view>
+      <view class="empty card" wx:if="{{myClasses.length === 0}}">暂未加入班级</view>
+    </block>
+    <view class="section-title">{{role === 'parent' ? '近期课程' : '课程列表'}}</view>
     <view class="card session pressable" wx:for="{{sessions}}" wx:key="id" data-id="{{item.id}}" bindtap="open">
       <view class="between"><view class="date"><text>{{item.weekday}}</text><text>{{item.shortDate}}</text></view><view class="grow main"><view class="between"><view class="name">{{item.title}}</view><view class="tag {{item.myStatus === 'booked' ? '' : 'gold'}}">{{item.statusLabel}}</view></view><view class="muted small meta">{{item.time}} · {{item.venue}}</view><view class="session-coach"><image wx:if="{{item.coach.avatarUrl}}" src="{{item.coach.avatarUrl}}" mode="aspectFill" /><view wx:else class="coach-avatar-fallback">教</view><text>{{item.coach.name || item.coachName}}</text></view><view class="focus">本次重点 · {{item.focus}}</view></view></view>
     </view>
-    <view class="empty card" wx:if="{{sessions.length === 0}}">暂未发布课程</view>
+    <view class="empty card no-session" wx:if="{{sessions.length === 0 && role === 'parent' && myClasses.length}}"><view>当前暂无新的训练安排</view><view class="muted small">新的课程安排发布后，会自动显示在“我的课表”中。</view></view>
+    <view class="empty card" wx:elif="{{sessions.length === 0}}">{{role === 'parent' ? '加入班级后，可在这里查看训练安排' : '暂未发布课程'}}</view>
   </block>
   <floating-add-button wx:if="{{role === 'admin'}}" bind:add="add" />
 </view>

@@ -1,4 +1,13 @@
 <view class="page page-enter">
+  <view class="form-section binding-section" wx:if="{{id}}">
+    <view class="between"><view><view class="form-title">教练账号绑定</view><view class="form-tip">档案可先排课，微信账号绑定后才可登录教练端。</view></view><text class="account-badge {{coach.accountStatus}}">{{coach.accountStatusLabel}}</text></view>
+    <view wx:if="{{coach.accountStatus === 'BOUND'}}" class="binding-body"><view>已绑定南联教练账号</view><view class="binding-meta">绑定时间：{{coach.boundAt || '历史账号'}}</view><view class="binding-meta">最近登录：{{coach.lastLoginAt || '暂无记录'}}</view><button class="danger-outline" loading="{{bindingBusy}}" bindtap="unbind">解除微信绑定</button></view>
+    <view wx:elif="{{coach.accountStatus === 'UNBOUND'}}" class="binding-body">
+      <view wx:if="{{invite && (invite.status === 'ACTIVE' || invite.inviteId)}}" class="invite-box"><image wx:if="{{invite.qrFileId}}" src="{{invite.qrFileId}}" mode="aspectFit" bindtap="previewQr"/><view class="invite-code" wx:if="{{invite.code}}">{{invite.code}}</view><view class="binding-meta" wx:else>备用码仅在刚生成时显示；如已遗失，请重新生成。</view><view class="binding-meta">到期时间：{{invite.expiresText || '生成后24小时'}}</view><view class="binding-meta">新邀请会使旧邀请立即失效</view><view class="invite-actions"><button class="minor" bindtap="createInvite" loading="{{bindingBusy}}">重新生成</button><button class="danger-outline" bindtap="cancelInvite" loading="{{bindingBusy}}">撤销邀请</button></view></view>
+      <button wx:else class="binding-primary" loading="{{bindingBusy}}" bindtap="createInvite">邀请教练绑定</button>
+    </view>
+    <view wx:else class="binding-body"><view class="binding-meta">该教练已停用，不能生成新邀请或登录。</view><button class="binding-primary" data-active="{{true}}" bindtap="setStatus">重新启用教练</button></view>
+  </view>
   <view class="form-section public-section"><view class="form-title">家长公开资料</view><view class="form-tip">家长端只读取本区域的精简字段。</view>
     <view class="photo-title">教练照片</view><view class="avatar-editor"><image wx:if="{{previewAvatarUrl || coach.avatarUrl}}" src="{{previewAvatarUrl || coach.avatarUrl}}" mode="aspectFill" bindtap="previewPhoto"/><view wx:else class="avatar-empty">默认头像</view><view class="photo-name">{{coach.name || '新教练'}}</view><view class="photo-empty-tip" wx:if="{{!previewAvatarUrl && !coach.avatarUrl}}">暂未上传教练照片</view><button class="photo-change" loading="{{uploading}}" bindtap="avatar">{{previewAvatarUrl || coach.avatarUrl ? '修改照片' : '上传照片'}}</button><view class="photo-actions" wx:if="{{id && photoDirty}}"><button class="photo-cancel" bindtap="cancelAvatar">取消修改</button><button class="photo-save" loading="{{savingAvatar}}" bindtap="saveAvatar">保存照片</button></view><text class="photo-hint" wx:if="{{id && photoDirty}}">当前显示新照片预览，保存前不会替换正式头像。</text></view>
     <view class="field"><text class="field-label">姓名 *</text><input class="input" value="{{coach.name}}" data-key="name" bindinput="field"/></view>
@@ -19,7 +28,7 @@
     <view class="field"><text class="field-label">所有荣誉</text><textarea class="textarea" value="{{honorsText}}" placeholder="每行一条" data-key="honorsText" bindinput="textField"/></view>
     <view class="field"><text class="field-label">内部证书</text><textarea class="textarea compact" value="{{internalCertificatesText}}" placeholder="不会向家长公开" data-key="internalCertificatesText" bindinput="textField"/></view>
     <view class="field"><text class="field-label">内部备注</text><textarea class="textarea" value="{{coach.internalNote}}" placeholder="薪资、绩效等内部信息" data-key="internalNote" bindinput="field"/></view>
-    <view class="between switch-row"><text>资料启用</text><switch checked="{{coach.active}}" data-key="active" bindchange="toggle" color="#173b77"/></view>
+    <view class="status-control" wx:if="{{id && coach.accountStatus !== 'INACTIVE'}}"><view class="form-tip">停用会阻止教练登录并撤销未使用邀请，历史业务数据保持不变。</view><button class="danger-outline" data-active="{{false}}" bindtap="setStatus">停用该教练</button></view>
   </view>
   <button class="btn-primary" loading="{{saving}}" bindtap="save">保存教练资料</button>
 </view>

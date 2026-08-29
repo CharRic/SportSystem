@@ -32,8 +32,9 @@ const component = createComponent();
 component.initPosition();
 assert.deepStrictEqual(
   { width: component.data.areaWidth, height: component.data.areaHeight, x: component.data.x, y: component.data.y },
-  { width: 375, height: 667, x: 275, y: 557 }
+  { width: 375, height: 667, x: 275, y: 509 }
 );
+assert.ok(component.data.y + 86 <= 667 - 72, "default position must stay above the bottom navigation safe area");
 
 component.data.moving = true;
 component.position = { x: 25, y: 260, mode: "free" };

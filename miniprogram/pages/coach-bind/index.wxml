@@ -1,0 +1,16 @@
+<view class="bind-page">
+  <view class="brand"><image src="/images/nanlian-logo.png" mode="aspectFit"/><view class="title">绑定南联教练账号</view><view class="desc">扫码或输入管理员提供的备用绑定码</view></view>
+  <view class="card" wx:if="{{!preview && !success}}">
+    <view class="label">备用绑定码</view><input maxlength="6" value="{{code}}" bindinput="code" placeholder="例如 NL8K2P"/>
+    <button class="primary" loading="{{loading}}" bindtap="preview">核验教练档案</button>
+    <view class="tip">教练账号由管理员预先建立。这里不会开放注册教练或管理员身份。</view>
+  </view>
+  <view class="card profile" wx:elif="{{preview && !success}}">
+    <image wx:if="{{preview.coach.avatarUrl}}" src="{{preview.coach.avatarUrl}}" mode="aspectFill"/><view wx:else class="fallback">教</view>
+    <view class="name">{{preview.coach.name}}</view><view class="title-line">{{preview.coach.publicTitle}}</view><view class="certificate">{{preview.coach.highestCertificate}}</view>
+    <view class="confirm-tip">请确认这是您的教练档案。绑定后，本微信将用于进入南联教练端。</view>
+    <button class="primary" loading="{{loading}}" bindtap="confirm">确认绑定</button><button class="plain" bindtap="back">不是我的账号</button>
+  </view>
+  <view class="card success" wx:else><view class="check">✓</view><view class="name">绑定成功</view><view class="desc">正在进入南联教练端...</view></view>
+  <view class="error" wx:if="{{error}}">{{error}}</view>
+</view>

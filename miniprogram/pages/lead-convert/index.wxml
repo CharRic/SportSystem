@@ -4,7 +4,7 @@
     <view class="field"><text class="field-label">孩子照片 *</text><view class="avatar-upload" bindtap="avatar"><image wx:if="{{avatarUrl}}" src="{{avatarUrl}}" mode="aspectFill"/><view wx:else>{{uploading ? '正在上传...' : '＋ 从相册选择或拍照'}}</view></view><view class="muted small photo-help">正式建档必填，仅用于俱乐部内部身份确认</view></view>
     <view class="field"><text class="field-label">报名日期</text><picker mode="date" value="{{registrationDate}}" bindchange="registrationDate"><view class="picker">{{registrationDate}}</view></picker></view>
     <view class="field"><text class="field-label">招生负责人</text><picker range="{{coaches}}" range-key="name" value="{{coachIndex}}" bindchange="coach"><view class="picker">{{coaches[coachIndex].name || lead.ownerCoachName || '暂未分配'}}</view></picker></view>
-    <view class="notice">本步骤只创建正式学员档案：不加入班级、不生成classMember、不发放或扣除课时，也不创建候补。家长绑定、管理员编班和课程购买分别通过现有正式流程完成。</view>
+    <view class="notice">本步骤只创建正式学员档案，不会自动加入班级或变更课时。家长绑定、管理员编班和课程购买需分别通过对应流程完成。</view>
   </view>
   <button class="btn-primary" disabled="{{uploading}}" loading="{{saving}}" bindtap="save">转为正式学员</button>
 </view>

@@ -11,6 +11,7 @@ Page({
   },
   async primary() {
     const session = this.data.session; if (this.data.acting) return;
+    if (session.status === "CANCELLED") return wx.showToast({ title: "课程已取消，本次不扣课时", icon: "none" });
     if (session.myStatus === "leave_pending") return this.cancelLeave();
     if (session.myStatus === "leave_approved") return wx.showToast({ title: "已请假，本次不扣课时", icon: "none" });
     if (session.myStatus === "leave_rejected") return this.leave();
@@ -25,10 +26,11 @@ Page({
   leaves() { wx.navigateTo({ url: "/pages/leave-requests/index" }); },
   edit() { wx.navigateTo({ url: `/pages/session-form/index?id=${this.data.id}` }); },
   coachEdit() { wx.navigateTo({ url: `/pages/session-coach-edit/index?id=${this.data.id}` }); },
+  classDetail() { if (this.data.session && this.data.session.classId) wx.navigateTo({ url: `/pages/class-detail/index?id=${this.data.session.classId}` }); },
   trainingEdit() { wx.navigateTo({ url: `/pages/training-execution/index?sessionId=${this.data.id}` }); },
   evaluation() { wx.navigateTo({ url: `/pages/training-evaluation/index?sessionId=${this.data.id}` }); },
   complete() { wx.showModal({ title: "确认完成课程", content: "完成后将按实际执教教练生成课时流水。", success: async (result) => { if (!result.confirm) return; await api.call("completeSession", { sessionId: this.data.id }); wx.showToast({ title: "课程已完成" }); this.load(); } }); },
-  cancelSession() { wx.showModal({ title: "取消课程", editable: true, placeholderText: "请输入取消原因", success: async (result) => { if (!result.confirm) return; await api.call("cancelSession", { sessionId: this.data.id, reason: result.content }); wx.showToast({ title: "课程已取消" }); this.load(); } }); },
+  cancelSession() { wx.navigateTo({ url: `/pages/session-cancel/index?id=${this.data.id}` }); },
   location() { return new Promise((resolve, reject) => wx.getLocation({ type: "gcj02", isHighAccuracy: true, success: resolve, fail: reject })); },
   code(event) { this.setData({ checkinCode: event.detail.value }); },
   async openCheckin() { if (this.data.openingCheckin) return; this.setData({ openingCheckin: true }); try { const location = await this.location(); const result = await api.call("openCheckin", { sessionId: this.data.id, latitude: location.latitude, longitude: location.longitude, radius: 300, minutes: 30 }); this.setData({ checkinCode: result.code, checkinInfo: { ...result, open: true } }); wx.showModal({ title: "签到已发布", content: `校验码：${result.code}\n范围：${result.radius}米\n有效期：30分钟`, showCancel: false }); await this.load(); } catch (error) { wx.showToast({ title: error.message || "无法发布签到", icon: "none" }); } finally { this.setData({ openingCheckin: false }); } },

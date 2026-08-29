@@ -8,6 +8,7 @@ const app = JSON.parse(read("miniprogram/app.json"));
 const v2 = read("cloudfunctions/clubApi/v2.js");
 const business = read("cloudfunctions/clubApi/business-service.js");
 const payment = read("cloudfunctions/clubApi/payment-service.js");
+const paymentSecurity = read("cloudfunctions/clubApi/payment-security.js");
 const api = read("miniprogram/utils/api.js");
 
 const removedPageFragments = ["renewals"];
@@ -23,7 +24,7 @@ assert(v2.includes("classCode") && v2.includes("input.keyword"), "缺少班级�
 assert(v2.includes("reviewLeave") && v2.includes("notifications"), "缺少请假审批或通知");
 assert(v2.includes("TEST_ROLE_SWITCH_OPENIDS") && v2.includes("canSwitchTestRole"), "缺少受限测试身份切换");
 
-["WECHAT_PAY_PRIVATE_KEY", "WECHAT_PAY_PUBLIC_KEY", "WECHAT_PAY_API_V3_KEY", "SUCCESS"].forEach((token) => assert(payment.includes(token) || business.includes(token), `支付适配缺少: ${token}`));
+["WECHAT_PAY_PRIVATE_KEY", "WECHAT_PAY_PUBLIC_KEY", "WECHAT_PAY_API_V3_KEY", "SUCCESS"].forEach((token) => assert(payment.includes(token) || paymentSecurity.includes(token) || business.includes(token), `支付适配缺少: ${token}`));
 assert(payment.includes("queryWechatPayment"), "支付成功后必须由服务端查询确认");
 assert(business.includes("db.runTransaction") && business.includes('order.status === "PAID"'), "订单结算必须事务化且幂等");
 

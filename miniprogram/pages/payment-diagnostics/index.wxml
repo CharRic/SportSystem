@@ -1,0 +1,26 @@
+<view class="page page-enter">
+  <view class="brand-hero hero"><view class="eyebrow">WECHAT PAY</view><view class="title">微信支付状态</view><view class="sub">仅管理员可见 · 不展示任何密钥内容</view></view>
+  <view class="loading-state" wx:if="{{loading}}">正在检查支付环境…</view>
+  <view class="error-state" wx:elif="{{error}}">{{error}}<view class="retry" bindtap="load">重试</view></view>
+  <block wx:elif="{{diagnostics}}">
+    <view class="status-grid">
+      <view class="status-card"><text class="label">生产支付开关</text><text class="value {{diagnostics.environment.productionEnabled ? 'ok' : 'closed'}}">{{diagnostics.environment.productionEnabled ? '开启' : '关闭'}}</text></view>
+      <view class="status-card"><text class="label">微信支付配置</text><text class="value {{diagnostics.environment.status === 'READY' ? 'ok' : 'fail'}}">{{diagnostics.environment.status}}</text></view>
+    </view>
+    <view class="section-title">生产配置检查</view>
+    <view class="card config-list"><view class="config-row" wx:for="{{fieldRows}}" wx:key="key"><text>{{item.label}}</text><text class="{{item.configured ? 'ok' : 'fail'}}">{{item.configured ? '已配置' : '未配置'}}</text></view><view class="config-row"><text>AppID一致性</text><text class="{{diagnostics.environment.appIdMatches ? 'ok' : 'fail'}}">{{diagnostics.environment.appIdMatches ? '一致' : '不一致'}}</text></view></view>
+    <view class="notice" wx:if="{{diagnostics.environment.missing.length}}">缺失项：{{missingText}}</view>
+    <view class="section-title">1元测试套餐</view>
+    <view class="card package" wx:if="{{diagnostics.testPackage}}"><view><view class="name">{{diagnostics.testPackage.name}}</view><view class="muted">{{diagnostics.testPackage.lessonCount}}节 · ¥{{diagnostics.testPackage.priceYuan}} · 激活后{{diagnostics.testPackage.validityMonths}}个月</view></view><text class="pill {{diagnostics.testPackage.status === 'ACTIVE' ? 'ok-bg' : ''}}">{{diagnostics.testPackage.status}}</text></view>
+    <view class="button-row"><button class="secondary" bindtap="packages">管理测试套餐</button><button class="secondary" bindtap="orders">查看全部订单</button></view>
+    <view class="section-title">最近支付状态</view>
+    <view class="card" wx:if="{{diagnostics.latestPayment}}"><view class="config-row"><text>订单</text><text>{{diagnostics.latestPayment.orderNo}}</text></view><view class="config-row"><text>事件</text><text>{{diagnostics.latestPayment.source}}</text></view><view class="config-row"><text>状态</text><text>{{diagnostics.latestPayment.status}}</text></view><view class="config-row"><text>交易号</text><text>{{diagnostics.latestPayment.transactionIdMasked || '未生成'}}</text></view></view><view class="empty card" wx:else>暂无支付事件</view>
+    <view class="section-title">测试订单诊断</view>
+    <picker wx:if="{{diagnostics.testOrders.length}}" mode="selector" range="{{diagnostics.testOrders}}" range-key="orderNo" value="{{orderIndex}}" bindchange="selectOrder"><view class="picker">选择订单：{{diagnostics.testOrders[orderIndex].orderNo}} ›</view></picker>
+    <view class="empty card" wx:else>暂无1元测试订单。启用测试套餐后，请使用真实家长账号创建订单并支付。</view>
+    <view class="card detail" wx:if="{{orderDetail}}"><view class="config-row"><text>学员</text><text>{{orderDetail.order.student}}</text></view><view class="config-row"><text>套餐</text><text>{{orderDetail.order.package}}</text></view><view class="config-row"><text>金额</text><text>¥{{orderDetail.order.amountFen / 100}}</text></view><view class="config-row"><text>订单状态</text><text>{{orderDetail.order.orderStatus}}</text></view><view class="config-row"><text>支付状态</text><text>{{orderDetail.order.paymentStatus}}</text></view><view class="config-row"><text>交易号</text><text>{{orderDetail.order.transactionIdMasked || '未生成'}}</text></view><view class="config-row"><text>创建</text><text>{{orderDetail.order.createdAt}}</text></view><view class="config-row"><text>支付</text><text>{{orderDetail.order.paidAt || '未支付'}}</text></view><view class="event-title">支付事件</view><view class="event" wx:for="{{orderDetail.events}}" wx:key="createdAt"><text>{{item.source}}</text><text>{{item.status}}</text><text class="muted">{{item.createdAt}}</text></view></view>
+    <button wx:if="{{orderDetail}}" class="primary" loading="{{checking}}" bindtap="runAcceptance">运行真实支付验收检查</button>
+    <view class="card result" wx:if="{{acceptance}}"><view class="result-head {{acceptance.status === 'PASS' ? 'ok' : 'fail'}}">{{acceptance.status}}</view><view class="check" wx:for="{{acceptance.checks}}" wx:key="key"><text class="{{item.pass ? 'ok' : 'fail'}}">{{item.pass ? '✓' : '×'}}</text><view><view>{{item.key}}</view><view class="muted small">{{item.detail}}</view></view></view></view>
+    <view class="safety">配置READY不会自动开启生产支付。必须人工把 PAYMENT_PRODUCTION_ENABLED 设为 true 后，家长才可能发起真实付款。</view>
+  </block>
+</view>

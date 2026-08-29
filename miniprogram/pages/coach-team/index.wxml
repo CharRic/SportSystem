@@ -3,16 +3,17 @@
 <view class="error-state" wx:elif="{{error}}">{{error}}<view class="retry" bindtap="load">重新加载</view></view>
 <view class="page page-enter" wx:else>
   <view class="between list-head"><view class="muted small">共 {{coaches.length}} 位教练</view><button wx:if="{{role === 'admin'}}" class="add-btn" bindtap="add">新增教练</button></view>
-  <view class="card coach-card pressable" wx:for="{{coaches}}" wx:key="coachId" data-id="{{item.coachId}}" data-public="{{item.isPublic}}" bindtap="detail">
+  <scroll-view wx:if="{{role === 'admin'}}" scroll-x class="filters"><view class="filter {{filter === 'ALL' ? 'on' : ''}}" data-filter="ALL" bindtap="filter">全部</view><view class="filter {{filter === 'BOUND' ? 'on' : ''}}" data-filter="BOUND" bindtap="filter">已绑定</view><view class="filter {{filter === 'UNBOUND' ? 'on' : ''}}" data-filter="UNBOUND" bindtap="filter">未绑定</view><view class="filter {{filter === 'INACTIVE' ? 'on' : ''}}" data-filter="INACTIVE" bindtap="filter">已停用</view></scroll-view>
+  <view class="card coach-card pressable" wx:for="{{visibleCoaches}}" wx:key="coachId" data-id="{{item.profileId}}" data-public="{{item.isPublic}}" bindtap="detail">
     <image wx:if="{{item.avatarUrl}}" class="coach-avatar" src="{{item.avatarUrl}}" mode="aspectFill"/><view wx:else class="coach-avatar fallback">{{item.initial}}</view>
     <view class="coach-info">
-      <view class="between"><view class="coach-name">{{item.name}}</view><text wx:if="{{role === 'admin' && !item.isPublic}}" class="private-badge">内部</text></view>
+      <view class="between"><view class="coach-name">{{item.name}}</view><view><text wx:if="{{role === 'admin' && !item.isPublic}}" class="private-badge">内部</text><text wx:if="{{role === 'admin'}}" class="account {{item.accountStatus}}">{{item.accountStatusLabel}}</text></view></view>
       <view class="coach-title">{{item.publicTitle}}</view>
       <view class="credential">{{item.highestCertificate}}</view>
       <view class="muted small">{{item.experienceText}}</view>
       <view class="specialty-line">{{item.specialtyText}}</view>
-      <view class="between card-footer"><text class="view-link">查看介绍 ›</text><text wx:if="{{role === 'admin'}}" class="edit-link" data-id="{{item.coachId}}" catchtap="edit">管理资料</text></view>
+      <view class="between card-footer"><text class="view-link">查看介绍 ›</text><view wx:if="{{role === 'admin'}}"><text wx:if="{{item.accountStatus === 'UNBOUND'}}" class="invite-link" data-id="{{item.profileId}}" catchtap="invite">生成邀请</text><text class="edit-link" data-id="{{item.profileId}}" catchtap="edit">管理资料</text></view></view>
     </view>
   </view>
-  <view class="empty card" wx:if="{{coaches.length === 0}}">暂无公开教练资料</view>
+  <view class="empty card" wx:if="{{visibleCoaches.length === 0}}">暂无符合条件的教练</view>
 </view>

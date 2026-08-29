@@ -1,4 +1,4 @@
-const ACTIONS = new Set(["getTrainingMeta", "getResearchDashboard", "listCurriculums", "saveCurriculum", "setCurriculumStatus", "archiveCurriculum", "listWeeklyTrainingPlans", "getWeeklyTrainingPlan", "saveWeeklyTrainingPlan", "confirmWeeklyTrainingPlan", "saveSessionTrainingInfo", "getSessionTrainingInfo", "getSessionTrainingPlan"]);
+const ACTIONS = new Set(["getTrainingMeta", "getResearchDashboard", "listCurriculums", "saveCurriculum", "setCurriculumStatus", "archiveCurriculum", "listWeeklyTrainingPlans", "getWeeklyTrainingPlan", "saveWeeklyTrainingPlan", "confirmWeeklyTrainingPlan", "saveSessionTrainingInfo", "getSessionTrainingInfo", "getSessionTrainingPlan", "getParentClassTrainingOverview"]);
 const TRAINING_TOPICS = { BALL_MASTERY: "球感", DRIBBLING: "带球", PASSING: "传球", RECEIVING: "接球", SHOOTING: "射门", ONE_V_ONE_ATTACK: "1V1进攻", ONE_V_ONE_DEFENSE: "1V1防守", TWO_V_ONE: "2V1", SPATIAL_AWARENESS: "空间意识", TRANSITION: "攻防转换", TEAM_PLAY: "团队配合", COORDINATION: "协调", MATCH_PLAY: "比赛" };
 const STATUS_LABELS = { DRAFT: "草稿", CONFIRMED: "已确认", COMPLETED: "已完成" };
 const DEFAULTS = [
@@ -8,6 +8,8 @@ const DEFAULTS = [
 ];
 const focusList = (value) => (Array.isArray(value) ? value : String(value || "").split(/[、，,\n/]+/)).map((item) => String(item).trim()).filter(Boolean);
 const focusText = (value) => focusList(value).join(" / ");
+const ageNumbers = (value) => [...String(value || "").matchAll(/U\s*(\d{1,2})/gi)].map((match) => Number(match[1]));
+function ageMatches(classAgeGroup, curriculumAgeGroup) { const classAges = ageNumbers(classAgeGroup), curriculumAges = ageNumbers(curriculumAgeGroup); if (!classAges.length || !curriculumAges.length) return String(classAgeGroup || "").trim() === String(curriculumAgeGroup || "").trim(); const low = Math.min(...curriculumAges), high = Math.max(...curriculumAges); return classAges.some((age) => age >= low && age <= high); }
 function ensure(data) {
   data.curriculums = data.curriculums || [];
   if (!data.curriculums.length) data.curriculums.push(...DEFAULTS.map((item) => ({ ...item, active: true, createdBy: "SYSTEM", createdAt: "2026-08-25 09:00", updatedAt: "2026-08-25 09:00" })));
@@ -53,6 +55,16 @@ function call(action, input, ctx) {
     const session = data.sessions.find((item) => item.id === input.sessionId); if (!session) throw new Error("课程不存在"); const weekly = data.weeklyTrainingPlans.find((item) => item.id === session.weeklyTrainingPlanId); const value = { session: { id: session.id, title: session.title, date: session.date, time: session.time, classId: session.classId }, trainingTheme: session.trainingTheme || "", trainingThemeKey: session.trainingThemeKey || "", trainingFocus: String(session.trainingFocus || session.focus || ""), weeklyTrainingPlanId: session.weeklyTrainingPlanId || "", weeklyTheme: weekly ? weekly.mainTheme : "" };
     if (ctx.role === "parent") { if (!ctx.canAccessStudent(input.studentId)) throw new Error("无权查看该孩子训练信息"); if (!(data.classMembers || []).some((item) => item.classId === session.classId && item.studentId === input.studentId && item.status === "ACTIVE")) throw new Error("该学员不是本课程班级成员"); return value; }
     staff(ctx); if (!canClass(ctx, session.classId)) throw new Error("无权查看该课程训练信息"); return { ...value, trainingNote: session.trainingNote || "", weeklyPlan: weekly ? planView(data, weekly) : null };
+  }
+  if (action === "getParentClassTrainingOverview") {
+    if (ctx.role !== "parent") throw new Error("仅家长可读取家长版培养内容");
+    const classId = String(input.classId || ""), clubClass = data.classes.find((item) => item.id === classId), ownIds = new Set(data.students.filter((student) => ctx.canAccessStudent(student.id)).map((student) => student.id));
+    if (!clubClass || !(data.classMembers || []).some((item) => item.classId === classId && item.status === "ACTIVE" && ownIds.has(item.studentId))) throw new Error("无权查看该班级培养内容");
+    const today = ctx.stamp().slice(0, 10);
+    const weekly = data.weeklyTrainingPlans.filter((item) => item.classId === classId && item.status === "CONFIRMED" && item.weekStart <= today && item.weekEnd >= today).sort((a, b) => String(b.updatedAt || b.createdAt).localeCompare(String(a.updatedAt || a.createdAt)))[0] || null;
+    const active = data.curriculums.filter((item) => item.active !== false && (item.classType || "REGULAR") === (clubClass.classType || "REGULAR") && ageMatches(clubClass.ageGroup, item.ageGroup));
+    let curriculum = weekly && weekly.curriculumId ? active.find((item) => item.id === weekly.curriculumId) : null; if (!curriculum) curriculum = active.sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0))[0] || null;
+    return { classId, ageStage: curriculum ? curriculum.ageGroup : clubClass.ageGroup || "", curriculum: curriculum ? { curriculumId: curriculum.id, name: curriculum.name || "", parentSummary: curriculum.description || "", parentGoals: (curriculum.objectives || []).map(String), parentTrainingAreas: (curriculum.trainingTopics || []).map((key) => TRAINING_TOPICS[key] || key) } : null, weeklyPlan: weekly ? { weekStart: weekly.weekStart || "", weekEnd: weekly.weekEnd || "", mainTheme: weekly.mainTheme || "", trainingFocus: focusList(weekly.trainingFocus) } : null };
   }
   if (action === "getResearchDashboard") { staff(ctx); const plans = data.weeklyTrainingPlans.filter((item) => canClass(ctx, item.classId)), sessions = data.sessions.filter((item) => canClass(ctx, item.classId)); return { metrics: { curriculums: data.curriculums.filter((item) => item.active !== false).length, weeklyPlans: plans.length, confirmedPlans: plans.filter((item) => item.status === "CONFIRMED").length, sessions: sessions.length, filledSessions: sessions.filter((item) => item.trainingTheme && String(item.trainingFocus || "").trim()).length }, weeklyPlans: plans.sort((a, b) => String(b.weekStart).localeCompare(String(a.weekStart))).slice(0, 20).map((item) => planView(data, item)) }; }
   throw new Error("未知训练管理操作");

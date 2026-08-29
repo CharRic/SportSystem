@@ -1,0 +1,44 @@
+<view class="auth-shell">
+  <view class="brand">
+    <image class="logo" src="/images/nanlian-logo.png" mode="aspectFit"/>
+    <view class="club-name">永嘉南联足球俱乐部</view>
+    <view class="product-name">南联青训</view>
+    <view class="welcome">欢迎使用南联青训管理系统</view>
+  </view>
+
+  <view class="panel" wx:if="{{mode === 'WELCOME'}}">
+    <button class="primary" loading="{{loading}}" disabled="{{loading}}" bindtap="quickLogin">微信快捷登录</button>
+    <view class="divider"><text></text><view>首次使用？</view><text></text></view>
+    <button class="secondary" bindtap="showParentRegister">注册家长账号</button>
+    <view class="staff-link" bindtap="goCoachBind">教练员绑定 ›</view>
+    <view class="staff-link" bindtap="showStaffLogin">已授权工作人员登录 ›</view>
+  </view>
+
+  <view class="panel" wx:elif="{{mode === 'PARENT_REGISTER'}}">
+    <view class="panel-title">注册家长账号</view>
+    <view class="panel-desc">仅创建家长账号。孩子资料将在注册后单独添加。</view>
+    <view class="field"><text>家长姓名</text><input value="{{form.name}}" data-key="name" bindinput="field" placeholder="请输入真实姓名"/></view>
+    <button class="phone-button" open-type="getPhoneNumber" bindgetphonenumber="phoneNumber">微信手机号快捷授权</button>
+    <view class="or">或手动填写</view>
+    <view class="field"><text>手机号</text><input type="number" maxlength="11" value="{{form.mobile}}" data-key="mobile" bindinput="field" placeholder="请输入11位手机号"/></view>
+    <button class="primary" loading="{{loading}}" disabled="{{loading}}" bindtap="registerParent">完成注册</button>
+    <view class="back" bindtap="back">返回</view>
+  </view>
+
+  <view class="panel" wx:elif="{{mode === 'STAFF'}}">
+    <view class="panel-title">教练 / 工作人员登录</view>
+    <view class="staff-state" wx:if="{{loading}}">正在核验当前微信身份...</view>
+    <view class="staff-state" wx:else>{{staffMessage}}</view>
+    <button class="secondary" wx:if="{{!loading}}" bindtap="staffLogin">重新识别</button>
+    <view class="staff-auth" wx:if="{{!loading && staffMessage}}"><view class="or">已有管理员授权码</view><input type="number" maxlength="6" value="{{staffCode}}" bindinput="staffCode" placeholder="请输入6位授权码"/><button class="primary" bindtap="claimStaffInvite">确认授权并登录</button></view>
+    <view class="back" bindtap="back">返回</view>
+  </view>
+
+  <view class="panel disabled" wx:elif="{{mode === 'DISABLED'}}">
+    <view class="panel-title">当前账号暂不可使用</view>
+    <view class="panel-desc">如有疑问，请联系南联俱乐部管理员。</view>
+  </view>
+
+  <view class="error" wx:if="{{error}}">{{error}}</view>
+  <view class="privacy">微信身份仅用于识别南联系统账号，不会自动创建家长、教练或管理员身份。</view>
+</view>

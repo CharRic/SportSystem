@@ -24,13 +24,16 @@
     <view class="card"><view class="info"><text class="muted">来源渠道</text><text>{{student.recruitment.source || '未登记'}}</text></view><view class="info"><text class="muted">招生负责人</text><text>{{student.recruitment.ownerCoachName || '未分配'}}</text></view><view class="info"><text class="muted">首次联系</text><text>{{student.recruitment.firstContactAt || '未登记'}}</text></view><view class="info"><text class="muted">最近体验课</text><text>{{student.recruitment.trialDate || '未参加'}}</text></view><view class="info" wx:if="{{student.recruitment.trialFeedback}}"><text class="muted">体验课反馈</text><text class="right">{{student.recruitment.trialFeedback}}</text></view></view>
   </view>
 
-  <view class="section-title">所在班级</view>
-  <view class="card" wx:for="{{student.classes}}" wx:key="id">
-    <view class="between"><view><view class="card-title">{{item.name}}</view><view class="muted small mt">{{item.schedule}} · {{item.venue}}</view></view><view class="tag">{{item.coachName}}</view></view>
+  <view class="section-title">{{role === 'parent' ? '我的班级' : '所在班级'}}</view>
+  <view class="card {{role === 'parent' ? 'pressable' : ''}}" wx:for="{{student.classes}}" wx:key="id" data-id="{{item.id}}" bindtap="classDetail">
+    <view class="between"><view><view class="card-title">{{item.name}}</view><view class="class-badges"><text class="tag">{{item.classTypeLabel || (item.classType === 'ELITE' ? '精英队' : '普通班')}}</text><text class="member-status">正式成员</text></view><view class="muted small mt">{{item.schedule}} · {{item.venue}}</view></view><view class="tag" wx:if="{{role !== 'parent'}}">{{item.coachName}}</view><text class="link" wx:else>班级详情 ›</text></view>
   </view>
-  <view class="empty card" wx:if="{{student.classes.length === 0}}">暂未分班</view>
-  <view class="section-title">课时流水</view>
-  <view class="card"><view class="ledger" wx:for="{{student.lessonLedger}}" wx:key="id"><view><view>{{item.note}}</view><view class="muted small">{{item.createdAt}} · 余额 {{item.balanceAfter}}</view></view><text class="delta {{item.delta > 0 ? 'plus' : 'minus'}}">{{item.delta > 0 ? '+' : ''}}{{item.delta}}</text></view><view class="empty" wx:if="{{!student.lessonLedger || student.lessonLedger.length === 0}}">暂无课时流水</view></view>
+  <view class="empty card" wx:if="{{student.classes.length === 0}}">暂未加入班级</view>
+  <view class="section-title" wx:if="{{role !== 'coach'}}">课时权益</view>
+  <view class="card entitlement" wx:if="{{role !== 'coach'}}" wx:for="{{student.lessonEntitlements}}" wx:key="id"><view class="between"><view><view class="card-title">{{item.packageName}}</view><view class="muted small">剩余 {{item.remainingLessons}} / {{item.purchasedLessons}} 节</view></view><view class="tag {{item.status === 'EXPIRED' ? 'danger' : ''}}">{{item.statusLabel}}</view></view><view class="validity-message">{{item.validityMessage}}</view><view class="muted small" wx:if="{{item.activatedAt}}">激活日期：{{item.activatedAt}}</view><view class="muted small" wx:if="{{item.extensionDays}}">累计延期：{{item.extensionDays}}天</view><button class="btn-secondary entitlement-extend" wx:if="{{role === 'admin' && item.status !== 'EXHAUSTED'}}" data-id="{{item.id}}" bindtap="extendEntitlement">延长有效期</button></view>
+  <view class="empty card" wx:if="{{role !== 'coach' && (!student.lessonEntitlements || student.lessonEntitlements.length === 0)}}">暂无套餐课时权益，历史期初课时继续按原账本管理。</view>
+  <view class="section-title" wx:if="{{role !== 'coach'}}">课时流水</view>
+  <view class="card" wx:if="{{role !== 'coach'}}"><view class="ledger" wx:for="{{student.lessonLedger}}" wx:key="id"><view><view>{{item.note}}</view><view class="muted small">{{item.createdAt}} · 余额 {{item.balanceAfter}}</view></view><text class="delta {{item.delta > 0 ? 'plus' : 'minus'}}">{{item.delta > 0 ? '+' : ''}}{{item.delta}}</text></view><view class="empty" wx:if="{{!student.lessonLedger || student.lessonLedger.length === 0}}">暂无课时流水</view></view>
 
   <view class="section-title">最近出勤</view>
   <view class="card">

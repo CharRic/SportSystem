@@ -2,7 +2,7 @@ const CLASS_TYPES = { REGULAR: "普通班", ELITE: "精英队" };
 const MEMBER_STATUS = { ACTIVE: "在队", INACTIVE: "已退出" };
 const SELECTION_STATUS = { PENDING: "待审核", APPROVED: "已通过", REJECTED: "暂不入选", WITHDRAWN: "已撤销" };
 const EXIT_REASONS = ["年龄升级", "调整梯队", "训练表现", "长期缺勤", "转会/离队", "其他"];
-const ACTIONS = ["getClassMeta", "getClassDetail", "searchStudentsForClass", "addClassMember", "joinClass", "removeClassMember", "transferClassMember", "listEliteSelections", "recommendElite", "reviewEliteSelection", "promoteToElite"];
+const ACTIONS = ["getClassMeta", "getClassDetail", "getParentClassDetail", "searchStudentsForClass", "addClassMember", "joinClass", "removeClassMember", "transferClassMember", "listEliteSelections", "recommendElite", "reviewEliteSelection", "promoteToElite"];
 
 function createClassService({ db, fetchAll, fetchByIds, publicDoc, nowText, requireRole, audit, getCoachReference }) {
   let migrationReady;
@@ -42,7 +42,43 @@ function createClassService({ db, fetchAll, fetchByIds, publicDoc, nowText, requ
   async function decorateClass(clubClass) {
     const members = await activeMembers(clubClass._id); const standardCapacity = Math.max(1, Number(clubClass.standardCapacity || 20)); const studentCount = members.length;
     const assistantCoaches = []; for (const coachId of clubClass.assistantCoachIds || []) assistantCoaches.push(getCoachReference ? await getCoachReference(coachId, "") : { name: "", avatarUrl: "" });
+    if (!assistantCoaches.length && clubClass.assistantCoachName) for (const name of String(clubClass.assistantCoachName).split(/[、,，]+/).map((item) => item.trim()).filter(Boolean)) assistantCoaches.push(getCoachReference ? await getCoachReference("", name) : { coachId: "", name, avatarUrl: "" });
     return { ...publicDoc(clubClass), headCoach: getCoachReference ? await getCoachReference(clubClass.headCoachUserId || clubClass.coachUserId, clubClass.headCoachName || clubClass.coachName) : { name: clubClass.headCoachName || clubClass.coachName || "", avatarUrl: "" }, assistantCoaches, classTypeLabel: CLASS_TYPES[clubClass.classType] || clubClass.classType, studentCount, standardCapacity, remainingCapacity: Math.max(0, standardCapacity - studentCount), overCapacity: Math.max(0, studentCount - standardCapacity), isFull: studentCount >= standardCapacity, enrollmentLabel: clubClass.classType === "ELITE" ? "俱乐部选拔制" : studentCount >= standardCapacity ? "本班已满" : "可报名" };
+  }
+
+  async function parentClassSummary(clubClass) {
+    const decorated = await decorateClass(clubClass);
+    return { id: decorated.id, name: decorated.name, classCode: decorated.classCode || "", classType: decorated.classType, classTypeLabel: decorated.classTypeLabel, ageGroup: decorated.ageGroup || "", schedule: decorated.schedule || "", venue: decorated.venue || "", headCoach: decorated.headCoach, assistantCoaches: decorated.assistantCoaches || [], studentCount: decorated.studentCount, canViewRoster: false, classmates: [], upcomingSessions: [] };
+  }
+
+  function isPublishedSession(session) {
+    return session.publishStatus === "PUBLISHED" || ["published", "COMPLETED", "CANCELLED"].includes(session.status);
+  }
+
+  async function parentClassDetail(user, classId) {
+    requireRole(user, ["parent"]);
+    const ownedStudents = await fetchAll("students", { ownerParentUserId: user._id, status: "active" });
+    const ownedIds = new Set(ownedStudents.map((item) => item._id));
+    const ownedMemberships = (await activeMembers(classId)).filter((item) => ownedIds.has(item.studentId));
+    if (!ownedMemberships.length) throw new Error("无权查看该班级成员名单");
+    const clubClass = (await db.collection("classes").doc(classId).get()).data;
+    if (!clubClass || clubClass.status === "INACTIVE") throw new Error("班级不存在或已停用");
+    const members = await activeMembers(classId);
+    const students = await fetchByIds("students", members.map((item) => item.studentId));
+    const classmates = members.map((member) => {
+      const student = students.find((item) => item._id === member.studentId) || {};
+      return { studentId: member.studentId, displayName: String(student.name || "学员"), avatarUrl: String(student.avatarUrl || "") };
+    });
+    const today = nowText().slice(0, 10);
+    const sessions = (await fetchAll("sessions", { classId })).filter((item) => isPublishedSession(item) && item.date >= today && item.status !== "CANCELLED").sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`)).slice(0, 6);
+    const upcomingSessions = [];
+    for (const session of sessions) {
+      const assignments = (session.actualCoachAssignments || []).length ? session.actualCoachAssignments : session.plannedCoachAssignments || [];
+      const primary = assignments.find((item) => item.role === "HEAD") || assignments[0] || {};
+      const coach = getCoachReference ? await getCoachReference(primary.coachId || session.coachUserId || clubClass.headCoachUserId || clubClass.coachUserId, primary.coachId ? "" : session.coachName || clubClass.headCoachName || clubClass.coachName) : { coachId: "", name: session.coachName || clubClass.headCoachName || "", avatarUrl: "" };
+      upcomingSessions.push({ sessionId: session._id, date: session.date || "", weekday: session.weekday || "", time: session.time || "", venue: session.venue || "", trainingTheme: session.trainingTheme || session.title || "", coach });
+    }
+    return { ...(await parentClassSummary(clubClass)), canViewRoster: true, studentCount: classmates.length, classmates, upcomingSessions };
   }
 
   function assertClassAccess(user, classId) {
@@ -112,7 +148,8 @@ function createClassService({ db, fetchAll, fetchByIds, publicDoc, nowText, requ
     await ensureMigration();
     if (["reviewEliteSelection", "promoteToElite"].includes(action) && input.keepSource === undefined) input.keepSource = true;
     if (action === "getClassMeta") { const rows = await fetchAll("classes", { status: "ACTIVE" }); const decorated = []; for (const row of rows) decorated.push(await decorateClass(row)); return { classTypes: CLASS_TYPES, memberStatuses: MEMBER_STATUS, selectionStatuses: SELECTION_STATUS, exitReasons: EXIT_REASONS, regularClasses: decorated.filter((item) => item.classType === "REGULAR"), eliteClasses: decorated.filter((item) => item.classType === "ELITE") }; }
-    if (action === "getClassDetail") { assertClassAccess(user, input.id); const clubClass = (await db.collection("classes").doc(input.id).get()).data; if (!clubClass) throw new Error("班级不存在"); const members = user.role === "parent" ? [] : await fetchAll("classMembers", { classId: input.id }); const filtered = members.filter((item) => input.includeInactive || item.status === "ACTIVE"); const students = await fetchByIds("students", filtered.map((item) => item.studentId)); const classes = await fetchAll("classes"); const memberRows = []; for (const member of filtered) { const student = students.find((item) => item._id === member.studentId); if (student) memberRows.push(await memberView(member, student, classes)); } const pendingSelectionCount = (await db.collection("eliteSelections").where({ targetEliteClassId: input.id, status: "PENDING" }).count()).total; return { ...(await decorateClass(clubClass)), members: memberRows, pendingSelectionCount }; }
+    if (action === "getClassDetail") { assertClassAccess(user, input.id); const clubClass = (await db.collection("classes").doc(input.id).get()).data; if (!clubClass) throw new Error("班级不存在"); if (user.role === "parent") return parentClassSummary(clubClass); const members = await fetchAll("classMembers", { classId: input.id }); const filtered = members.filter((item) => input.includeInactive || item.status === "ACTIVE"); const students = await fetchByIds("students", filtered.map((item) => item.studentId)); const classes = await fetchAll("classes"); const memberRows = []; for (const member of filtered) { const student = students.find((item) => item._id === member.studentId); if (student) memberRows.push(await memberView(member, student, classes)); } const pendingSelectionCount = (await db.collection("eliteSelections").where({ targetEliteClassId: input.id, status: "PENDING" }).count()).total; return { ...(await decorateClass(clubClass)), members: memberRows, pendingSelectionCount }; }
+    if (action === "getParentClassDetail") return parentClassDetail(user, input.id);
     if (action === "searchStudentsForClass") { requireRole(user, ["admin"]); const [students, classes, members] = await Promise.all([fetchAll("students", { status: "active" }), fetchAll("classes"), fetchAll("classMembers", { status: "ACTIVE" })]); const query = String(input.query || "").trim().toLowerCase(); return students.filter((student) => { const ids = members.filter((item) => item.studentId === student._id).map((item) => item.classId); const names = classes.filter((item) => ids.includes(item._id)).map((item) => item.name); return !query || [student.name, student.guardianName, student.guardianPhone, String(student.birthDate || "").slice(0, 4), names.join("、")].join(" ").toLowerCase().includes(query); }).map((student) => { const ids = members.filter((item) => item.studentId === student._id).map((item) => item.classId); const own = classes.filter((item) => ids.includes(item._id)); return { ...publicDoc(student), classNames: own.map((item) => item.name).join("、"), trainingLevel: own.some((item) => item.classType === "ELITE") ? "精英队" : "普通班" }; }); }
     if (action === "addClassMember") { requireRole(user, ["admin"]); return createMember(user, { ...input, source: input.source || "ADMIN_ADD" }); }
     if (action === "joinClass") return joinClass(user, input);

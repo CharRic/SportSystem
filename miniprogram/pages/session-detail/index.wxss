@@ -4,3 +4,6 @@
 .detail-coach{display:flex;align-items:center;gap:10rpx}.detail-coach image,.coach-avatar-fallback{width:42rpx;height:42rpx;border-radius:50%}.coach-avatar-fallback{display:flex;align-items:center;justify-content:center;background:#eaf5ee;color:#126b3d;font-size:20rpx;font-weight:700}
 .coach-line{display:flex;justify-content:space-between;padding:14rpx 0;border-bottom:1rpx solid #eef1ef}.coach-label{margin-top:20rpx}
 .training-theme{font-size:32rpx;font-weight:800;color:#12643b;margin-bottom:12rpx}
+.class-link,.stage-link{display:flex;align-items:center;justify-content:space-between;gap:20rpx}.stage-link{border-left:7rpx solid #c89d2a}.stage-link .muted:last-child{margin-top:8rpx}
+.cancellation{border-left:8rpx solid #b6453f;background:#fff7f5}.cancellation .muted{margin-top:12rpx}.makeup{margin-top:20rpx;padding:18rpx;border-radius:16rpx;background:#eef4f1}
+.detail{padding-bottom:148rpx}.hero{border-radius:22rpx;padding:30rpx}.coach-avatar-fallback{background:#eaf0f9;color:#173b77}.training-theme{font-size:31rpx;color:#173b77;margin-bottom:10rpx}

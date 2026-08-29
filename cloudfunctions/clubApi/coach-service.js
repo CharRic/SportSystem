@@ -11,7 +11,7 @@ function strings(value) { if (Array.isArray(value)) return value.map((item) => S
 function publicCertificates(profile) { const names = (profile.certificates || []).filter((item) => typeof item === "string" || item.visibility !== "INTERNAL").sort((a, b) => Number((a || {}).priority || 99) - Number((b || {}).priority || 99)).map((item) => typeof item === "string" ? item : item.name).filter(Boolean); return [...new Set([profile.highestCertificate, ...names].filter(Boolean))]; }
 function publicView(profile) { if (!profile || profile.active === false || profile.isPublic === false) return null; return { coachId: profile._id, name: String(profile.name || ""), avatarUrl: String(profile.avatarUrl || ""), publicTitle: String(profile.publicTitle || ""), coachingYears: Math.max(0, Number(profile.coachingYears || 0)), highestCertificate: String(profile.highestCertificate || ""), mainCertificates: publicCertificates(profile), currentClasses: strings(profile.currentClasses), specialties: strings(profile.specialties).slice(0, 3), shortBio: String(profile.shortBio || "").slice(0, 120) }; }
 
-function createCoachService({ db, fetchAll, nowText, requireRole, audit }) {
+function createCoachService({ db, fetchAll, nowText, requireRole, audit, getBindingView }) {
   let defaultsReady;
   const handles = (action) => ACTIONS.includes(action);
   async function ensureDefaults() {
@@ -31,7 +31,13 @@ function createCoachService({ db, fetchAll, nowText, requireRole, audit }) {
     const name = String(profile.name || "").trim(), publicTitle = String(profile.publicTitle || "").trim(), highestCertificate = String(profile.highestCertificate || "").trim();
     if (!name || !publicTitle || !highestCertificate) throw new Error("请完整填写家长公开资料");
     const certificates = (profile.certificates || []).map((item, index) => ({ name: String(typeof item === "string" ? item : item.name || "").trim(), visibility: typeof item === "string" ? "PUBLIC" : item.visibility === "INTERNAL" ? "INTERNAL" : "PUBLIC", priority: Number((item || {}).priority || index + 1) })).filter((item) => item.name);
-    return { ...previous, ...profile, name, avatarUrl, publicTitle, coachingYears: Math.max(0, Number(profile.coachingYears || 0)), highestCertificate, certificates, currentClasses: strings(profile.currentClasses), specialties: strings(profile.specialties), shortBio, bio: String(profile.bio || "").trim(), careerHistory: strings(profile.careerHistory), footballHistory: strings(profile.footballHistory), trainingPhilosophy: String(profile.trainingPhilosophy || "").trim(), honors: strings(profile.honors), internalNote: String(profile.internalNote || "").trim(), active: profile.active !== false, isPublic: profile.isPublic !== false, updatedAt: nowText() };
+    const protectedFields = { coachUserId: previous.coachUserId || "", boundUserId: previous.boundUserId || "", boundAt: previous.boundAt || "", active: previous._id ? previous.active !== false : true, status: previous._id ? previous.status || "ACTIVE" : "ACTIVE" };
+    return { ...previous, ...profile, ...protectedFields, name, avatarUrl, publicTitle, coachingYears: Math.max(0, Number(profile.coachingYears || 0)), highestCertificate, certificates, currentClasses: strings(profile.currentClasses), specialties: strings(profile.specialties), shortBio, bio: String(profile.bio || "").trim(), careerHistory: strings(profile.careerHistory), footballHistory: strings(profile.footballHistory), trainingPhilosophy: String(profile.trainingPhilosophy || "").trim(), honors: strings(profile.honors), internalNote: String(profile.internalNote || "").trim(), isPublic: profile.isPublic !== false, updatedAt: nowText() };
+  }
+  async function adminView(profile) { return { ...profile, ...(getBindingView ? await getBindingView(profile) : {}), id: profile._id, _id: undefined }; }
+  async function findProfile(value) {
+    const direct = (await db.collection("coachProfiles").doc(String(value || "")).get().catch(() => ({ data: null }))).data;
+    return direct || (await db.collection("coachProfiles").where({ coachUserId: String(value || "") }).limit(1).get()).data[0] || null;
   }
   async function getReference(coachUserId, coachName) {
     let profile;
@@ -43,13 +49,13 @@ function createCoachService({ db, fetchAll, nowText, requireRole, audit }) {
     await ensureDefaults();
     if (action === "listPublicCoaches") return (await fetchAll("coachProfiles")).map(publicView).filter(Boolean);
     if (action === "getPublicCoach") { const profile = (await db.collection("coachProfiles").doc(input.id).get().catch(() => ({ data: null }))).data, result = publicView(profile); if (!result) throw new Error("教练资料不存在或未公开"); return result; }
-    if (action === "listCoachProfiles") { requireRole(user, ["admin"]); return (await fetchAll("coachProfiles")).map((item) => ({ ...item, id: item._id, _id: undefined })); }
-    if (action === "getCoachProfile") { requireRole(user, ["admin"]); const profile = (await db.collection("coachProfiles").doc(input.id).get()).data; if (!profile) throw new Error("教练资料不存在"); return { ...profile, id: profile._id, _id: undefined }; }
+    if (action === "listCoachProfiles") { requireRole(user, ["admin"]); const rows = []; for (const item of await fetchAll("coachProfiles")) rows.push(await adminView(item)); return rows; }
+    if (action === "getCoachProfile") { requireRole(user, ["admin"]); const profile = await findProfile(input.id); if (!profile) throw new Error("教练资料不存在"); return adminView(profile); }
     if (action === "saveCoachProfile") {
       requireRole(user, ["admin"]); const incoming = input.coach || {}; let id = incoming.id, previous = {};
       if (id) { previous = (await db.collection("coachProfiles").doc(id).get()).data; if (!previous) throw new Error("教练资料不存在"); }
       const normalized = normalizeProfile(incoming, previous || {}); delete normalized.id; delete normalized._id;
-      if (id) await db.collection("coachProfiles").doc(id).update({ data: normalized }); else { const added = await db.collection("coachProfiles").add({ data: { ...normalized, createdAt: nowText() } }); id = added._id; }
+      if (id) await db.collection("coachProfiles").doc(id).update({ data: normalized }); else { const added = await db.collection("coachProfiles").add({ data: { ...normalized, createdAt: nowText() } }); id = added._id; await db.collection("coachProfiles").doc(id).update({ data: { coachUserId: `coach_${id}`, updatedAt: nowText() } }); }
       await audit(user, "SAVE_COACH_PROFILE", "coachProfile", id, { isPublic: normalized.isPublic }); return { id };
     }
     if (action === "updateCoachAvatar") {

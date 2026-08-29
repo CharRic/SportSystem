@@ -6,3 +6,4 @@
 .health-note { margin-top: 18rpx; color: #9b5c18; font-size: 23rpx; }.submit { margin: 34rpx 0 20rpx; }
 .leave-locked{display:flex;align-items:center;justify-content:space-between;margin-top:24rpx;padding:20rpx;border-radius:14rpx;background:#eef2f7;color:#526173}.leave-title{font-weight:750;color:#526173;margin-bottom:7rpx}.leave-locked>text{color:#2d5ea8;font-size:23rpx}
 .trial-student{border-left:7rpx solid #d1a72f}.trial-grid{grid-template-columns:repeat(2,1fr)}.trial-rule{margin-top:16rpx}
+.date{color:#173b77;background:#eaf0f9;padding:14rpx 18rpx}.all{color:#173b77}.student-photo.fallback{background:#eaf0f9;color:#173b77}

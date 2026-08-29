@@ -19,13 +19,5 @@ Page({
   open(event) { wx.navigateTo({ url: `/pages/class-detail/index?id=${event.currentTarget.dataset.id}` }); },
   add() { wx.navigateTo({ url: "/pages/class-form/index" }); },
   edit(event) { wx.navigateTo({ url: `/pages/class-form/index?id=${event.currentTarget.dataset.id}` }); },
-  async coachInvite(event) {
-    const item = this.data.classes.find((clubClass) => clubClass.id === event.currentTarget.dataset.id);
-    if (!item || this.data.invitingId) return;
-    this.setData({ invitingId: item.id });
-    try {
-      const result = await api.call("createInvite", { role: "coach", classId: item.id, displayName: item.headCoachName || item.coachName });
-      wx.showModal({ title: "教练绑定邀请码", content: `${result.code}\n\n请教练在“我的”页面输入。`, showCancel: false });
-    } finally { this.setData({ invitingId: "" }); }
-  }
+  coachInvite() { wx.navigateTo({ url: "/pages/coach-team/index" }); }
 });

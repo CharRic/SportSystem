@@ -1,1 +1,1 @@
-.notice{padding:24rpx;border-radius:18rpx;background:#fff2de;color:#8f5b10}.order-title{font-size:30rpx;font-weight:750}.amount{font-size:34rpx;font-weight:800;color:#173b77}.footer{margin-top:18rpx}.confirm{margin-top:20rpx;width:100%}
+.notice{padding:24rpx;border-radius:18rpx;background:#fff2de;color:#8f5b10}.order-title{font-size:30rpx;font-weight:750}.amount{font-size:34rpx;font-weight:800;color:#173b77}.footer{margin-top:18rpx}.confirm{margin-top:20rpx;width:100%}.validity-tip{font-size:22rpx;color:#7a817d;margin-top:10rpx}

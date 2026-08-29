@@ -2,7 +2,7 @@ const api = require("../../utils/api");
 const { roleLabels, today } = require("../../utils/format");
 
 Page({
-  data: { loading: true, error: "", dashboard: {}, user: {}, roleLabel: "", today: today(), attentionTitle: "重点关注", nextSchedule: null, todayScheduleStats: { total: 0, inProgress: 0, upcoming: 0 } },
+  data: { loading: true, error: "", dashboard: {}, user: {}, roleLabel: "", familyStudents: [], parentEmpty: false, today: today(), attentionTitle: "重点关注", nextSchedule: null, todayScheduleStats: { total: 0, inProgress: 0, upcoming: 0 } },
   onShow() { this.load(); },
   onPullDownRefresh() { this.load(true); },
   async load(fromRefresh = false) {
@@ -30,6 +30,7 @@ Page({
         familyStudents: family.students,
         activeStudentId,
         activeStudentIndex: Math.max(0, family.students.findIndex((item) => item.id === activeStudentId)),
+        parentEmpty: context.user.role === "parent" && family.students.length === 0,
         nextSchedule,
         todayScheduleStats,
         loading: false,
@@ -42,6 +43,7 @@ Page({
     }
   },
   activeStudentChange(event) { const index = Number(event.detail.value), student = this.data.familyStudents[index]; if (!student) return; getApp().globalData.activeStudentId = student.id; wx.setStorageSync("activeStudentId", student.id); this.setData({ activeStudentIndex: index, activeStudentId: student.id }, () => this.load()); },
+  goAddChild() { wx.navigateTo({ url: "/pages/parent-child-form/index" }); },
   goStudents() { wx.switchTab({ url: "/pages/students/index" }); },
   goClasses() { wx.navigateTo({ url: "/pages/classes/index" }); },
   goCoachTeam() { wx.navigateTo({ url: "/pages/coach-team/index" }); },

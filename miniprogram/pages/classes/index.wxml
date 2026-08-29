@@ -8,7 +8,7 @@
   <block wx:else>
   <view class="card class-card pressable" wx:for="{{classes}}" wx:key="id" data-id="{{item.id}}" bindtap="open">
     <view class="top between">
-      <view><view class="name">{{item.name}} <text class="class-code">{{item.classCode}}</text></view><view class="row"><view class="tag">普通班</view><view class="coach-chip"><image wx:if="{{item.headCoach.avatarUrl}}" src="{{item.headCoach.avatarUrl}}" mode="aspectFill"/><view wx:else class="coach-avatar-fallback">教</view><text>{{item.headCoach.name || item.headCoachName || item.coachName}}</text></view><text class="edit" wx:if="{{role === 'admin' || role === 'coach'}}" data-id="{{item.id}}" catchtap="edit">编辑</text><text class="edit" wx:if="{{role === 'admin' && mode === 'cloud' && !item.headCoachUserId}}" data-id="{{item.id}}" catchtap="coachInvite">教练邀请码</text></view></view>
+      <view><view class="name">{{item.name}} <text class="class-code">{{item.classCode}}</text></view><view class="row"><view class="tag">普通班</view><view class="coach-chip"><image wx:if="{{item.headCoach.avatarUrl}}" src="{{item.headCoach.avatarUrl}}" mode="aspectFill"/><view wx:else class="coach-avatar-fallback">教</view><text>{{item.headCoach.name || item.headCoachName || item.coachName}}</text></view><text class="edit" wx:if="{{role === 'admin' || role === 'coach'}}" data-id="{{item.id}}" catchtap="edit">编辑</text><text class="edit" wx:if="{{role === 'admin' && mode === 'cloud' && !item.headCoachUserId}}" catchtap="coachInvite">教练管理</text></view></view>
       <view class="member"><text>{{item.studentCount}} / {{item.standardCapacity}}</text><text class="small muted">当前 / 标准</text></view>
     </view>
     <view class="divider"></view>

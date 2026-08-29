@@ -1,6 +1,6 @@
 .floating-add-area { position: fixed; left: 0; top: 0; z-index: 999; pointer-events: none; overflow: visible; }
 .floating-add-view { width: 76px; height: 86px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; pointer-events: auto; overflow: visible; }
-.floating-add-ring { box-sizing: border-box; width: 62px; height: 62px; padding: 4px; border: 1px dashed rgba(18, 100, 59, .78); border-radius: 50%; transition: transform .16s ease, filter .16s ease; }
-.floating-add-button { box-sizing: border-box; width: 52px; height: 52px; line-height: 50px; text-align: center; border-radius: 50%; background: #12643b; color: #fff; font-size: 34px; font-weight: 300; box-shadow: 0 8px 22px rgba(18, 100, 59, .34); }
-.floating-add-hint { margin-top: 4px; color: #12643b; font-size: 11px; font-weight: 600; white-space: nowrap; }
-.floating-add-view.dragging .floating-add-ring { transform: scale(1.1); filter: drop-shadow(0 10px 14px rgba(18, 100, 59, .3)); }
+.floating-add-ring { box-sizing: border-box; width: 62px; height: 62px; padding: 4px; border: 1px dashed rgba(23, 59, 119, .68); border-radius: 50%; transition: transform .16s ease, filter .16s ease; }
+.floating-add-button { box-sizing: border-box; width: 52px; height: 52px; line-height: 50px; text-align: center; border-radius: 50%; background: #173b77; color: #fff; font-size: 34px; font-weight: 300; box-shadow: 0 8px 22px rgba(23, 59, 119, .28); }
+.floating-add-hint { margin-top: 4px; color: #173b77; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.floating-add-view.dragging .floating-add-ring { transform: scale(1.1); filter: drop-shadow(0 10px 14px rgba(23, 59, 119, .26)); }

@@ -13,9 +13,9 @@
     <view class="roles"><view wx:for="{{roles}}" wx:key="value" data-role="{{item.value}}" bindtap="switchRole" class="role-btn {{context.user.role === item.value ? 'active' : ''}}">{{item.label}}</view></view>
   </view>
   <view class="card" wx:if="{{context.mode === 'cloud' && context.needsProfile}}">
-    <view class="card-title">注册学员</view>
-    <view class="muted small desc">普通学员可直接注册档案，注册后即可浏览并报名班级。</view>
-    <button class="btn-primary bind" bindtap="register">立即注册</button>
+    <view class="card-title">添加孩子</view>
+    <view class="muted small desc">您还没有孩子资料，提交后由俱乐部管理员审核确认。</view>
+    <button class="btn-primary bind" bindtap="register">＋ 添加孩子</button>
   </view>
   <view class="card" wx:if="{{context.mode === 'cloud' && (context.needsBinding || context.user.role === 'parent')}}">
     <view class="card-title">使用邀请码</view>
@@ -37,6 +37,7 @@
     <view class="menu-item"><text>数据模式</text><text class="muted">{{modeLabel}}</text></view>
     <view class="menu-item"><text>版本</text><text class="muted">正式运营版</text></view>
   </view>
+  <button class="logout" bindtap="logout">退出登录</button>
   <button wx:if="{{context.mode === 'local'}}" class="btn-secondary" bindtap="reset">重置演示数据</button>
   <view class="tip">测试角色入口仅对白名单账号开放。正式发布前须关闭测试白名单，并完成定位、未成年人信息和支付相关隐私配置。</view>
 </view>

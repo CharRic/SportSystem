@@ -12,6 +12,7 @@ const ACTIONS = new Set([
   "saveSessionTrainingInfo",
   "getSessionTrainingInfo",
   "getSessionTrainingPlan",
+  "getParentClassTrainingOverview",
 ]);
 
 const TRAINING_TOPICS = {
@@ -33,6 +34,13 @@ function createTrainingService(deps) {
   const focusText = (value) => focusList(value).join(" / ");
   const canClass = (user, classId) => user.role === "admin" || user.role === "coach" && (user.classIds || []).includes(classId);
   const requireStaff = (user) => requireRole(user, ["admin", "coach"]);
+  const ageNumbers = (value) => [...String(value || "").matchAll(/U\s*(\d{1,2})/gi)].map((match) => Number(match[1]));
+  const ageMatches = (classAgeGroup, curriculumAgeGroup) => {
+    const classAges = ageNumbers(classAgeGroup), curriculumAges = ageNumbers(curriculumAgeGroup);
+    if (!classAges.length || !curriculumAges.length) return String(classAgeGroup || "").trim() === String(curriculumAgeGroup || "").trim();
+    const low = Math.min(...curriculumAges), high = Math.max(...curriculumAges);
+    return classAges.some((age) => age >= low && age <= high);
+  };
 
   async function ensureDefaults() {
     const existing = await fetchAll("curriculums");
@@ -184,6 +192,32 @@ function createTrainingService(deps) {
     return { ...value, trainingNote: session.trainingNote || "", weeklyPlan: weekly ? await planView(weekly) : null };
   }
 
+  async function parentClassTrainingOverview(user, input) {
+    requireRole(user, ["parent"]);
+    await ensureDefaults();
+    const classId = String(input.classId || "");
+    const [clubClassResult, ownedStudents, memberships] = await Promise.all([
+      db.collection("classes").doc(classId).get().catch(() => ({ data: null })),
+      fetchAll("students", { ownerParentUserId: user._id, status: "active" }),
+      fetchAll("classMembers", { classId, status: "ACTIVE" }),
+    ]);
+    const clubClass = clubClassResult.data;
+    const ownedIds = new Set(ownedStudents.map((item) => item._id));
+    if (!clubClass || !memberships.some((item) => ownedIds.has(item.studentId))) throw new Error("无权查看该班级培养内容");
+    const today = nowText().slice(0, 10);
+    const confirmedPlans = (await fetchAll("weeklyTrainingPlans", { classId })).filter((item) => item.status === "CONFIRMED" && item.weekStart <= today && item.weekEnd >= today).sort((a, b) => String(b.updatedAt || b.createdAt).localeCompare(String(a.updatedAt || a.createdAt)));
+    const weekly = confirmedPlans[0] || null;
+    const activeCurriculums = (await fetchAll("curriculums")).filter((item) => item.active !== false && (item.classType || "REGULAR") === (clubClass.classType || "REGULAR") && ageMatches(clubClass.ageGroup, item.ageGroup));
+    let curriculum = weekly && weekly.curriculumId ? activeCurriculums.find((item) => item._id === weekly.curriculumId) : null;
+    if (!curriculum) curriculum = activeCurriculums.sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0))[0] || null;
+    return {
+      classId,
+      ageStage: curriculum ? curriculum.ageGroup : clubClass.ageGroup || "",
+      curriculum: curriculum ? { curriculumId: curriculum._id, name: curriculum.name || "", parentSummary: curriculum.description || "", parentGoals: (curriculum.objectives || []).map(String), parentTrainingAreas: (curriculum.trainingTopics || []).map((key) => TRAINING_TOPICS[key] || key) } : null,
+      weeklyPlan: weekly ? { weekStart: weekly.weekStart || "", weekEnd: weekly.weekEnd || "", mainTheme: weekly.mainTheme || "", trainingFocus: focusList(weekly.trainingFocus) } : null,
+    };
+  }
+
   async function dashboard(user) {
     requireStaff(user);
     const [curriculums, plans, sessions] = await Promise.all([fetchAll("curriculums"), fetchAll("weeklyTrainingPlans"), fetchAll("sessions")]);
@@ -207,6 +241,7 @@ function createTrainingService(deps) {
     if (action === "confirmWeeklyTrainingPlan") return confirmWeeklyPlan(user, input);
     if (action === "saveSessionTrainingInfo") return saveSessionTraining(user, input);
     if (action === "getSessionTrainingInfo" || action === "getSessionTrainingPlan") return getSessionTraining(user, input);
+    if (action === "getParentClassTrainingOverview") return parentClassTrainingOverview(user, input);
     throw new Error("未知训练管理操作");
   }
 

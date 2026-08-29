@@ -1,5 +1,6 @@
 const STORAGE_KEY = "floatingAddBtnPos";
 const EDGE_MARGIN = 24;
+const BOTTOM_SAFE_MARGIN = 72;
 const BUTTON_WIDTH = 76;
 const BUTTON_HEIGHT = 86;
 const LONG_PRESS_DELAY = 300;
@@ -33,7 +34,7 @@ Component({
     },
     resolvePosition(saved, width, height) {
       const maxX = Math.max(EDGE_MARGIN, width - BUTTON_WIDTH - EDGE_MARGIN);
-      const maxY = Math.max(EDGE_MARGIN, height - BUTTON_HEIGHT - EDGE_MARGIN);
+      const maxY = Math.max(EDGE_MARGIN, height - BUTTON_HEIGHT - BOTTOM_SAFE_MARGIN);
       if (!saved || !saved.mode) return { x: maxX, y: maxY, mode: "right" };
       const x = saved.mode === "left" ? EDGE_MARGIN : saved.mode === "right" ? maxX : clamp(saved.x, EDGE_MARGIN, maxX);
       const y = saved.mode === "bottom" ? maxY : clamp(saved.y, EDGE_MARGIN, maxY);
@@ -66,7 +67,7 @@ Component({
       const touch = event.touches && event.touches[0];
       if (!touch) return;
       const maxX = Math.max(0, this.data.areaWidth - BUTTON_WIDTH);
-      const maxY = Math.max(0, this.data.areaHeight - BUTTON_HEIGHT);
+      const maxY = Math.max(0, this.data.areaHeight - BUTTON_HEIGHT - BOTTOM_SAFE_MARGIN);
       const x = clamp(touch.clientX - this.touchOffset.x, 0, maxX);
       const y = clamp(touch.clientY - this.touchOffset.y, 0, maxY);
       this.position = { x, y, mode: "free" };
@@ -76,7 +77,7 @@ Component({
       this.clearLongPressTimer();
       if (!this.data.moving) return;
       const maxX = Math.max(EDGE_MARGIN, this.data.areaWidth - BUTTON_WIDTH - EDGE_MARGIN);
-      const maxY = Math.max(EDGE_MARGIN, this.data.areaHeight - BUTTON_HEIGHT - EDGE_MARGIN);
+      const maxY = Math.max(EDGE_MARGIN, this.data.areaHeight - BUTTON_HEIGHT - BOTTOM_SAFE_MARGIN);
       const current = this.position || { x: this.data.x, y: this.data.y };
       const currentX = clamp(current.x, EDGE_MARGIN, maxX);
       const currentY = clamp(current.y, EDGE_MARGIN, maxY);

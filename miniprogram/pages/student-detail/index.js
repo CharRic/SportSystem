@@ -20,6 +20,8 @@ Page({
   privateProfile() { wx.navigateTo({ url: `/pages/student-private-profile/index?studentId=${this.data.id}&name=${this.data.student.name}` }); },
   transferParent() { wx.navigateTo({ url: `/pages/student-parent-transfer/index?studentId=${this.data.id}` }); },
   growth() { wx.navigateTo({ url: `/pages/growth-profile/index?studentId=${this.data.id}` }); },
+  extendEntitlement(event) { const entitlementId = event.currentTarget.dataset.id; wx.showModal({ title: "延长有效期", editable: true, placeholderText: "请输入延长天数", success: (daysResult) => { if (!daysResult.confirm) return; const extensionDays = Number(daysResult.content || 0); if (!Number.isInteger(extensionDays) || extensionDays <= 0) return wx.showToast({ title: "请输入正确天数", icon: "none" }); wx.showModal({ title: "填写延期原因", editable: true, placeholderText: "必填，例如场地调整补偿", success: async (reasonResult) => { if (!reasonResult.confirm) return; const reason = String(reasonResult.content || "").trim(); if (!reason) return wx.showToast({ title: "延期原因必填", icon: "none" }); await api.call("extendLessonEntitlement", { entitlementId, extensionDays, reason }); wx.showToast({ title: "有效期已延长" }); await this.load(); } }); } }); },
+  classDetail(event) { wx.navigateTo({ url: `/pages/class-detail/index?id=${event.currentTarget.dataset.id}` }); },
   async replacePhoto() {
     if (!["admin", "parent"].includes(this.data.role) || this.data.uploadingPhoto) return;
     this.setData({ uploadingPhoto: true });

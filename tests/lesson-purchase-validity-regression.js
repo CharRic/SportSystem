@@ -1,0 +1,44 @@
+const assert = require("assert");
+const storage = {};
+global.wx = { getStorageSync: (key) => storage[key], setStorageSync: (key, value) => { storage[key] = value; } };
+const domain = require("../miniprogram/utils/local-domain");
+
+let checks = 0;
+const check = (value, message) => { assert(value, message); checks += 1; };
+
+(async () => {
+  await domain.call("resetDemo", { previewRole: "admin" });
+  const admin = (action, input = {}) => domain.call(action, { ...input, previewRole: "admin" });
+  const parent = (action, input = {}) => domain.call(action, { ...input, previewRole: "parent", previewUserId: "parent1" });
+  const studentId = "s-family2";
+  await admin("addClassMember", { classId: "cinterest", studentId, confirmCapacity: true });
+  const order = await parent("createOrder", { studentId, packageId: "pkg14" });
+  await admin("confirmOrderPayment", { id: order.id, paymentMethod: "MANUAL" });
+  let entitlement = (await parent("listLessonEntitlements", { studentId }))[0];
+  check(entitlement.status === "UNACTIVATED" && !entitlement.expiresAt, "purchase is unactivated before first formal deduction");
+  check(entitlement.activationMessage.includes("首次正式训练消课"), "parent receives unactivated validity message");
+  await admin("submitAttendance", { sessionId: "se2", records: [{ studentId, status: "present" }] });
+  entitlement = (await parent("listLessonEntitlements", { studentId }))[0];
+  check(entitlement.status === "ACTIVE" && entitlement.activatedAt === "2026-08-21", "first formal attendance activates package");
+  check(entitlement.expiresAt === "2027-01-21", "expiry uses five natural months from activation");
+  check(entitlement.remainingLessons === 13, "first attendance deducts one lesson");
+  const beforeLeaveExpiry = entitlement.expiresAt;
+  storage.nanlianClubV2.sessions.push({ id: "se-leave-validity", classId: "cinterest", title: "请假验证课", date: "2026-09-01", weekday: "周二", time: "19:00-20:30", venue: "瓯北中心小学", coachName: "王蒋生", status: "published" });
+  const leave = await parent("requestLeave", { studentId, sessionId: "se-leave-validity", reason: "个人安排" });
+  await admin("reviewLeave", { id: leave.id, approved: true });
+  entitlement = (await parent("listLessonEntitlements", { studentId }))[0];
+  check(entitlement.remainingLessons === 13, "approved personal leave does not deduct lessons");
+  check(entitlement.expiresAt === beforeLeaveExpiry, "personal leave does not extend validity");
+  await admin("extendLessonEntitlement", { entitlementId: entitlement.id, extensionDays: 10, reason: "场地调整人工补偿" });
+  entitlement = (await parent("listLessonEntitlements", { studentId }))[0];
+  check(entitlement.expiresAt === "2027-01-31" && entitlement.extensionDays === 10, "admin extension changes entitlement with explicit days");
+  check(storage.nanlianClubV2.lessonEntitlementAdjustments.some((item) => item.entitlementId === entitlement.id && item.reason === "场地调整人工补偿"), "admin extension writes adjustment history");
+  const raw = storage.nanlianClubV2.lessonEntitlements.find((item) => item.id === entitlement.id); raw.expiresAt = "2026-08-26"; raw.status = "ACTIVE";
+  entitlement = (await parent("listLessonEntitlements", { studentId }))[0];
+  check(entitlement.status === "EXPIRED" && entitlement.remainingLessons === 13, "expired package preserves remaining lesson history");
+  storage.nanlianClubV2.sessions.push({ id: "se-expired", classId: "cinterest", title: "到期验证课", date: "2026-08-27", weekday: "周四", time: "19:00-20:30", venue: "瓯北中心小学", coachName: "王蒋生", status: "published" });
+  await assert.rejects(() => admin("submitAttendance", { sessionId: "se-expired", records: [{ studentId, status: "present" }] }), /没有可用课时权益|已到期/, "expired lessons cannot be consumed"); checks += 1;
+  await assert.rejects(() => parent("extendLessonEntitlement", { entitlementId: entitlement.id, extensionDays: 7, reason: "越权" }), /权限/, "parent cannot extend validity"); checks += 1;
+  await assert.rejects(() => domain.call("extendLessonEntitlement", { entitlementId: entitlement.id, extensionDays: 7, reason: "越权", previewRole: "coach", previewUserId: "coach1" }), /权限/, "coach cannot extend validity"); checks += 1;
+  console.log(`Lesson purchase validity regression: ${checks} checks passed`);
+})().catch((error) => { console.error(error); process.exitCode = 1; });

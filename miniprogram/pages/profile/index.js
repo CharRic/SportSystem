@@ -33,6 +33,9 @@ Page({
   commerce() { wx.navigateTo({ url: "/pages/commerce-admin/index" }); },
   orders() { wx.navigateTo({ url: "/pages/orders/index" }); },
   notifications() { wx.navigateTo({ url: "/pages/notifications/index" }); },
+  logout() {
+    wx.showModal({ title: "退出登录", content: "退出只会清理本机登录状态，不会删除账号、孩子或历史业务数据。", success: (result) => { if (result.confirm) api.logout(); } });
+  },
   inviteInput(event) { this.setData({ inviteCode: event.detail.value }); },
   async claimInvite() {
     if (this.data.binding) return;

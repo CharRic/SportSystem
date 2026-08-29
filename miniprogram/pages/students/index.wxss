@@ -1,8 +1,8 @@
 .search { display: flex; align-items: center; gap: 16rpx; background: #fff; border-radius: 20rpx; padding: 0 24rpx; height: 88rpx; }
 .search input { flex: 1; }
-.search-icon { color: #12643b; font-size: 36rpx; }.clear { color: #8a918d; font-size: 38rpx; padding: 10rpx; }
+.search-icon { color: #173b77; font-size: 36rpx; }.clear { color: #8a918d; font-size: 38rpx; padding: 10rpx; }
 .summary { margin: 24rpx 4rpx 18rpx; }
 .student { display: flex; align-items: center; gap: 22rpx; }
-.avatar { width: 88rpx; height: 88rpx; flex: 0 0 auto; border-radius: 26rpx; background: #e9f5ee; color: #12643b; line-height: 88rpx; text-align: center; font-size: 34rpx; font-weight: 800; }
-.name { font-weight: 700; font-size: 31rpx; }.meta { margin: 10rpx 0; }.lessons { color: #12643b; font-weight: 700; }.lessons.low { color: #d97800; }
+.avatar { width: 84rpx; height: 84rpx; flex: 0 0 auto; border-radius: 50%; background: #eaf0f9; color: #173b77; line-height: 84rpx; text-align: center; font-size: 32rpx; font-weight: 800; }
+.name { font-weight: 700; font-size: 30rpx; }.meta { margin: 8rpx 0; }.lessons { color: #173b77; font-weight: 700; }.lessons.low { color: #d97800; }
 .photo-missing{display:inline-block;margin-left:10rpx;padding:3rpx 10rpx;border-radius:999rpx;background:#fff0dc;color:#a85b00;font-size:20rpx}

@@ -28,7 +28,7 @@ Page({
     wx.setNavigationBarTitle({ title: options.id ? "编辑班级" : "新增班级" });
     try {
       const [context, rawCoaches, existing] = await Promise.all([api.call("getContext"), api.call("listClassCoaches"), options.id ? api.call("getClass", { id: options.id }) : Promise.resolve(null)]);
-      const coaches = context.user.role === "admin" ? [{ id: "", name: "待邀请教练" }, ...rawCoaches] : rawCoaches;
+      const coaches = context.user.role === "admin" ? [{ id: "", name: "请选择教练档案" }, ...rawCoaches] : rawCoaches;
       const clubClass = existing || { ...this.data.clubClass, headCoachUserId: context.user.role === "coach" ? context.user.id : "", headCoachName: context.user.role === "coach" ? context.user.name : "" };
       const coachIndex = Math.max(0, coaches.findIndex((item) => item.id === clubClass.headCoachUserId));
       const scheduleSlots = Array.isArray(clubClass.scheduleSlots) && clubClass.scheduleSlots.length ? clubClass.scheduleSlots.map((slot) => ({ ...slot, weekdayIndex: Math.max(0, WEEKDAYS.indexOf(slot.weekday)) })) : parseSchedule(clubClass.schedule);
@@ -51,7 +51,7 @@ Page({
     if (scheduleSlots.some((slot) => !slot.weekday || !slot.startTime || !slot.endTime || slot.startTime >= slot.endTime)) { wx.showToast({ title: "请检查训练时段", icon: "none" }); return; }
     const schedule = scheduleSlots.map((slot) => `${slot.weekday} ${slot.startTime}-${slot.endTime}`).join(" / ");
     const clubClass = { ...this.data.clubClass, assistantCoachIds: this.data.assistantCoachIds.filter((id) => id !== this.data.clubClass.headCoachUserId), name: this.data.clubClass.name.trim(), schedule, scheduleSlots, venue: this.data.clubClass.venue.trim(), standardCapacity: Number(this.data.clubClass.standardCapacity) };
-    if (!clubClass.name || !clubClass.ageGroup || !clubClass.headCoachName || !clubClass.venue || clubClass.standardCapacity < 1) { wx.showToast({ title: "请完整填写班级信息", icon: "none" }); return; }
+    if (!clubClass.name || !clubClass.ageGroup || !clubClass.headCoachUserId || !clubClass.headCoachName || !clubClass.venue || clubClass.standardCapacity < 1) { wx.showToast({ title: "请完整填写班级信息并选择教练档案", icon: "none" }); return; }
     this.setData({ saving: true });
     try {
       await api.call("saveClass", { clubClass: { ...clubClass, id: this.data.id || undefined } });

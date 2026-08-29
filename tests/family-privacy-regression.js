@@ -12,7 +12,7 @@ async function run(){
   assert(family.students.every(noSensitive));sensitive++;
   await rejects(()=>parent("getGrowthProfile",{studentId:"s-growth"}),/无权/);permission++;
   const d1=await parent("getDashboard",{activeStudentId:"s1"}),d2=await parent("getDashboard",{activeStudentId:"s-family2"}); assert(d1.recentStudents.length===1&&d1.recentStudents[0].id==="s1"&&d2.recentStudents.length===1&&d2.recentStudents[0].id==="s-family2");multi++;
-  const s1Sessions=await parent("listSessions",{studentId:"s1"}),s2Sessions=await parent("listSessions",{studentId:"s-family2"}); assert(s1Sessions.find(x=>x.id==="se2").myStatus!==s2Sessions.find(x=>x.id==="se2").myStatus);multi++;
+  const s1Sessions=await parent("listSessions",{studentId:"s1"}),s2Sessions=await parent("listSessions",{studentId:"s-family2"}); assert(!s1Sessions.some(x=>x.id==="se2")&&s2Sessions.some(x=>x.id==="se2"&&x.myStatus==="booked"));multi++;
   await parent("requestLeave",{studentId:"s1",sessionId:"se1",reason:"孩子1请假"}); await parent("requestLeave",{studentId:"s-family2",sessionId:"se2",reason:"孩子2请假"}); const l1=await parent("listLeaveRequests",{studentId:"s1"}),l2=await parent("listLeaveRequests",{studentId:"s-family2"}); assert(l1.every(x=>x.studentId==="s1")&&l2.every(x=>x.studentId==="s-family2"));multi++;
   const g1=await parent("getGrowthProfile",{studentId:"s1"}),g2=await parent("getGrowthProfile",{studentId:"s-family2"}); assert(g1.student.id!==g2.student.id&&g2.assessments.every(x=>x.studentId!=="s1"));multi++;
   await rejects(()=>parent("listSessions",{studentId:"s-growth"}),/无权/);permission++;
